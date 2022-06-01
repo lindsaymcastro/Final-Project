@@ -1,0 +1,231 @@
+---
+title: "Final Project"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    code_folding: show
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE)
+```
+
+
+Libraries Used for this Project
+```{r,message=FALSE}
+library(readr)
+library(tidyverse)
+library(tidymodels)
+library(ISLR)
+library(rpart.plot)
+library(vip)
+library(janitor)
+library(xgboost)
+library(ISLR2) 
+library(discrim)
+library(poissonreg)
+library(corrr)
+library(corrplot)
+library(klaR) 
+library(pROC)
+library(glmnet)
+library(dplyr)
+library(randomForest)
+library(rpart)
+library(ranger)
+library(vip)
+tidymodels_prefer()
+```
+
+
+Read the data file into R. This file was a csv file.
+```{r}
+sneakers <- read.csv("Data/StockX-Data.csv") %>%
+  clean_names()
+sneakers
+```
+
+
+### Cleaning the Data
+Next we will do some cleaning. After reading the file in I noticed that there were certain variables that were read in as characters, however they will need to be used integers therefore we will be converting them as integers before we continue. Likewise the dates that are provided were read in as characters and we will have to switch them to be read as a date format.
+```{r}
+#Sale.Price from chr to int
+sneakers$sale_price <- parse_number(sneakers$sale_price)
+sneakers$sale_price <- as.integer(sneakers$sale_price)
+
+# Retail.Price from chr to int
+sneakers$retail_price <- parse_number(sneakers$retail_price)
+sneakers$retail_price <- as.integer(sneakers$retail_price)
+
+# Order.Date from chr to date
+sneakers$order_date <- as.Date(sneakers$order_date, "%m/%d/%y")
+
+# Release.Date from chr to date
+sneakers$release_date <- as.Date(sneakers$release_date, "%m/%d/%y")
+class(sneakers$release_date)
+
+#Check for Missing Values in the dataset
+sum(is.na(sneakers))
+```
+
+There are no missing values within the data set, therefore we will continue to use the entire data set. 
+
+
+
+### Exploratory Data Analysis (EDA)
+
+```{r}
+sneakers %>%
+  summary()
+
+sneakers %>%
+  count(shoe_size) %>%
+  arrange(-n)
+
+sneakers %>%
+  filter(sale_price>540) %>%
+  arrange(-sale_price)
+
+
+```
+
+
+Shoe Size
+There are 26 different shoe sizes in the dataset. The top three being size 10, 9, and 11. 
+
+```{r}
+sneakers %>%
+  select(brand) %>%
+  distinct() %>%
+  group_by()
+
+```
+
+There are only two brands within the 99,956 different observations found in this dataset: Yeezy and Off-White.
+
+
+
+Next we will be separating the two brands into their own dataframes to be able to analyze separately.
+```{r}
+# Off-White dataframe
+offwhite <- sneakers %>%
+  select(order_date, brand, sneaker_name, sale_price, retail_price, release_date, shoe_size, buyer_region) %>%
+  filter(brand == "Off-White")
+
+offwhite %>%
+  summary()
+
+offwhite %>%
+  count(shoe_size) %>%
+  arrange(-n)
+```
+This Off-White dataset is missing the size 13.0 and 14.5, therefore there are only 24 sizes as oppsoed to 26. The top three sizes with the most shoes are 10, 11, and 9 for the Off-White shoes. 
+
+
+```{r}
+# Yeezy dataframe
+
+#clean brand names to not include spaces
+sneakers$brand <- gsub(" ", "", sneakers$brand)
+
+yeezy <- sneakers %>%
+  select(order_date, brand, sneaker_name, sale_price, retail_price, release_date, shoe_size, buyer_region) %>%
+  filter(brand == "Yeezy")
+
+yeezy %>%
+  summary()
+
+yeezy %>%
+  count(shoe_size) %>%
+  arrange(-n)
+```
+This Yeezy dataset is missing the size 15, therefore there are only 25 sizes as opposed to 26. The top three sizes with the most shoes are 10, 9, and 9.5 for the Yeezy shoes. 
+
+
+Within each brand there are different types of sneakers. Next we will look through each of the dataframes for both brands to see how many individual sneakers there are.
+```{r}
+offwhite %>%
+  select(sneaker_name) %>%
+  distinct() %>%
+  count()
+
+offwhite %>%
+  count(sneaker_name) %>%
+  arrange(-n)
+```
+
+For the Off-White brand there are 30 individual sneaker types.
+
+```{r}
+yeezy %>%
+  select(sneaker_name) %>%
+  distinct() %>%
+  count()
+
+yeezy %>%
+  count(sneaker_name) %>%
+  arrange(-n)
+```
+
+For the Yeezy brand there are 20 indivdual sneaker types. In total there are 50 different kinds of sneakers across 2 different brands. 
+
+
+
+```{r}
+offwhite %>%
+  group_by(sneaker_name) %>%
+  summarize(avg_retail_price=mean(retail_price), avg_sale_price=mean(sale_price), max_sale_price=max(sale_price)) %>%
+  arrange(-max_sale_price)
+
+offwhite %>%
+  group_by(sneaker_name) %>%
+  summarize(avg_retail_price=mean(retail_price), avg_sale_price=mean(sale_price), max_sale_price=max(sale_price)) %>%
+  arrange(-avg_sale_price)
+```
+
+The most expensive sales for Off-White shoes are:
+* Air-Jordan-1-Retro-High-Off-White-Chicago
+* Air-Jordan-1-Retro-High-Off-White-University-Blue
+* Air-Jordan-1-Retro-High-Off-White-White
+
+
+The most expensive Off-White shoes on average for sales price are:
+* Air-Jordan-1-Retro-High-Off-White-White
+* Air-Jordan-1-Retro-High-Off-White-Chicago
+* Nike-Air-Presto-Off-White
+
+
+```{r}
+yeezy %>%
+  group_by(sneaker_name) %>%
+  summarize(avg_retail_price=mean(retail_price), avg_sale_price=mean(sale_price), max_sale_price=max(sale_price)) %>%
+  arrange(-max_sale_price)
+
+yeezy %>%
+  group_by(sneaker_name) %>%
+  summarize(avg_retail_price=mean(retail_price), avg_sale_price=mean(sale_price), max_sale_price=max(sale_price)) %>%
+  arrange(-avg_sale_price)
+```
+
+The most expenisive sales for Yeezy shoes are:
+* Adidas-Yeezy-Boost-350-Low-Pirate-Black-2015
+* Adidas-Yeezy-Boost-350-V2-Core-Black-White
+* Adidas-Yeezy-Boost-350-V2-Core-Black-Copper
+
+The most expensive Yeezy shoes on average for sales price are:
+* Adidas-Yeezy-Boost-350-Low-Turtledove
+* Adidas-Yeezy-Boost-350-Low-Oxford-Tan
+* Adidas-Yeezy-Boost-350-Low-Moonrock
+
+
+
+
+
+
+
+
+
