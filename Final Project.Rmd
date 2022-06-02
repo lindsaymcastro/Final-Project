@@ -38,21 +38,24 @@ library(randomForest)
 library(rpart)
 library(ranger)
 library(vip)
+library(lubridate)
 tidymodels_prefer()
 ```
 
 
 Read the data file into R. This file was a csv file.
 ```{r}
-sneakers <- read.csv("Data/StockX-Data.csv") %>%
-  clean_names()
-sneakers
+sneakers <- read.csv("Data/StockX-Data.csv")
 ```
 
 
 ### Cleaning the Data
 Next we will do some cleaning. After reading the file in I noticed that there were certain variables that were read in as characters, however they will need to be used integers therefore we will be converting them as integers before we continue. Likewise the dates that are provided were read in as characters and we will have to switch them to be read as a date format.
 ```{r}
+# Clean names
+sneakers <- sneakers %>%
+  clean_names()
+
 #Sale.Price from chr to int
 sneakers$sale_price <- parse_number(sneakers$sale_price)
 sneakers$sale_price <- as.integer(sneakers$sale_price)
@@ -74,6 +77,21 @@ sum(is.na(sneakers))
 
 There are no missing values within the data set, therefore we will continue to use the entire data set. 
 
+### Adding additional information for further analysis
+```{r}
+# Add the number of weeks between the release date and the order date
+sneakers$weeks <- round(difftime(sneakers$order_date, sneakers$release_date, units = "weeks"))
+
+# Add in the day of the week that the shoe was ordered/purchased
+sneakers$day_of_week <- format(as.Date(sneakers$order_date), "%A")
+
+# Add how much prfit was made on each sale
+sneakers$profit <- sneakers$sale_price - sneakers$retail_price
+
+# Add the percentage of the profit made
+sneakers$profit_perc <- round((sneakers$profit / sneakers$retail_price) * 100)
+
+```
 
 
 ### Exploratory Data Analysis (EDA)
@@ -85,17 +103,15 @@ sneakers %>%
 sneakers %>%
   count(shoe_size) %>%
   arrange(-n)
-
-sneakers %>%
-  filter(sale_price>540) %>%
-  arrange(-sale_price)
-
-
 ```
 
 
 Shoe Size
-There are 26 different shoe sizes in the dataset. The top three being size 10, 9, and 11. 
+There are 26 different shoe sizes in the dataset. The top three sizes across the entire data set are:
+* 10 (11093) 
+* 9 (9706) 
+* 11 (9251) 
+
 
 ```{r}
 sneakers %>%
@@ -109,13 +125,14 @@ There are only two brands within the 99,956 different observations found in this
 
 
 
-Next we will be separating the two brands into their own dataframes to be able to analyze separately.
+Next we will be separating the two brands into their own data frames to be able to analyze them separately.
 ```{r}
-# Off-White dataframe
+# Create a new data frame for all the Off-White brand sneakers
 offwhite <- sneakers %>%
-  select(order_date, brand, sneaker_name, sale_price, retail_price, release_date, shoe_size, buyer_region) %>%
+  select(order_date, brand, sneaker_name, sale_price, retail_price, release_date, shoe_size, buyer_region, weeks, day_of_week, profit, profit_perc) %>%
   filter(brand == "Off-White")
 
+# Summary of the data fram
 offwhite %>%
   summary()
 
@@ -123,19 +140,24 @@ offwhite %>%
   count(shoe_size) %>%
   arrange(-n)
 ```
-This Off-White dataset is missing the size 13.0 and 14.5, therefore there are only 24 sizes as oppsoed to 26. The top three sizes with the most shoes are 10, 11, and 9 for the Off-White shoes. 
+This Off-White dataset is missing the size 13.0 and 14.5, therefore there are only 24 sizes as opposed to 26. The top three sizes with the most shoes for Off-White are: 
+* 10 (3654) 
+* 11 (3109) 
+* 9 (2703) 
 
 
 ```{r}
 # Yeezy dataframe
 
-#clean brand names to not include spaces
+# Clean brand names to not include spaces
 sneakers$brand <- gsub(" ", "", sneakers$brand)
 
+# Create a new data frame for all the Yeezy brand sneakers
 yeezy <- sneakers %>%
-  select(order_date, brand, sneaker_name, sale_price, retail_price, release_date, shoe_size, buyer_region) %>%
+  select(order_date, brand, sneaker_name, sale_price, retail_price, release_date, shoe_size, buyer_region, weeks, day_of_week, profit, profit_perc) %>%
   filter(brand == "Yeezy")
 
+# Sumamry of the data frame
 yeezy %>%
   summary()
 
@@ -143,44 +165,50 @@ yeezy %>%
   count(shoe_size) %>%
   arrange(-n)
 ```
-This Yeezy dataset is missing the size 15, therefore there are only 25 sizes as opposed to 26. The top three sizes with the most shoes are 10, 9, and 9.5 for the Yeezy shoes. 
+This Yeezy dataset is missing the size 15, therefore there are only 25 sizes as opposed to 26. The top three sizes with the most shoes for Yeezy are: 
+* 10 (7439) 
+* 9 (7003) 
+* 9.5 (6430) 
 
 
 Within each brand there are different types of sneakers. Next we will look through each of the dataframes for both brands to see how many individual sneakers there are.
 ```{r}
-offwhite %>%
-  select(sneaker_name) %>%
-  distinct() %>%
-  count()
-
+#Find the number of sneakers listed for Off-White and the quantities of each.
 offwhite %>%
   count(sneaker_name) %>%
   arrange(-n)
 ```
 
-For the Off-White brand there are 30 individual sneaker types.
+For the Off-White brand there are 30 individual sneaker types, where the sneakers with the most sales are: 
+* Air-Jordan-1-Retro-High-Off-White-University-Blue (4635) 
+* Nike-Air-Presto-Off-White-Back-2018 (1884) 
+* Nike-Air-Presto-Off-White-White-2018 (1883) 
 
 ```{r}
-yeezy %>%
-  select(sneaker_name) %>%
-  distinct() %>%
-  count()
-
+#Find the number of sneakers listed for Yeezy and the quantities of each.
 yeezy %>%
   count(sneaker_name) %>%
   arrange(-n)
 ```
 
-For the Yeezy brand there are 20 indivdual sneaker types. In total there are 50 different kinds of sneakers across 2 different brands. 
+For the Yeezy brand there are 20 individual sneaker types, where the sneakers with the most sales are: 
+* Adidas-Yeezy-Boost-350-V2-Butter (11423) 
+* Adidas-Yeezy-Boost-350-V2-Beluga-2pt0 (10395) 
+* Adidas-Yeezy-Boost-350-V2-Zebra (10110) 
+
+
+In total there are 50 different kinds of sneakers across 2 different brands, 30 for Off-White, and 20 for Yeezy. 
 
 
 
 ```{r}
+# Find average sale and retail price and max sale price for each sneaker, arranged by highest sale price to lowest
 offwhite %>%
   group_by(sneaker_name) %>%
   summarize(avg_retail_price=mean(retail_price), avg_sale_price=mean(sale_price), max_sale_price=max(sale_price)) %>%
   arrange(-max_sale_price)
 
+# Find average sale and retail price and max sale price for each sneaker, arranged by highest average sale price to lowest
 offwhite %>%
   group_by(sneaker_name) %>%
   summarize(avg_retail_price=mean(retail_price), avg_sale_price=mean(sale_price), max_sale_price=max(sale_price)) %>%
@@ -188,38 +216,233 @@ offwhite %>%
 ```
 
 The most expensive sales for Off-White shoes are:
-* Air-Jordan-1-Retro-High-Off-White-Chicago
-* Air-Jordan-1-Retro-High-Off-White-University-Blue
-* Air-Jordan-1-Retro-High-Off-White-White
+* Air-Jordan-1-Retro-High-Off-White-Chicago (4050) 
+* Air-Jordan-1-Retro-High-Off-White-University-Blue (3680) 
+* Air-Jordan-1-Retro-High-Off-White-White (2950) 
 
 
 The most expensive Off-White shoes on average for sales price are:
-* Air-Jordan-1-Retro-High-Off-White-White
-* Air-Jordan-1-Retro-High-Off-White-Chicago
-* Nike-Air-Presto-Off-White
+* Air-Jordan-1-Retro-High-Off-White-White (1826.07) 
+* Air-Jordan-1-Retro-High-Off-White-Chicago (1769)
+* Nike-Air-Presto-Off-White (1236.05) 
 
 
 ```{r}
+# Find average sale and retail price and max sale price for each sneaker, arranged by highest sale price to lowest
 yeezy %>%
   group_by(sneaker_name) %>%
   summarize(avg_retail_price=mean(retail_price), avg_sale_price=mean(sale_price), max_sale_price=max(sale_price)) %>%
   arrange(-max_sale_price)
 
+# Find average sale and retail price and max sale price for each sneaker, arranged by highest average sale price to lowest
 yeezy %>%
   group_by(sneaker_name) %>%
   summarize(avg_retail_price=mean(retail_price), avg_sale_price=mean(sale_price), max_sale_price=max(sale_price)) %>%
   arrange(-avg_sale_price)
 ```
 
-The most expenisive sales for Yeezy shoes are:
-* Adidas-Yeezy-Boost-350-Low-Pirate-Black-2015
-* Adidas-Yeezy-Boost-350-V2-Core-Black-White
-* Adidas-Yeezy-Boost-350-V2-Core-Black-Copper
+The most expenisive sales for Yeezy shoes are: 
+* Adidas-Yeezy-Boost-350-Low-Turtledove (2300) 
+* Adidas-Yeezy-Boost-350-Low-Moonrock (2000) 
+* Adidas-Yeezy-Boost-350-V2-Blue-Tint (2000) 
 
 The most expensive Yeezy shoes on average for sales price are:
-* Adidas-Yeezy-Boost-350-Low-Turtledove
-* Adidas-Yeezy-Boost-350-Low-Oxford-Tan
-* Adidas-Yeezy-Boost-350-Low-Moonrock
+* Adidas-Yeezy-Boost-350-Low-Turtledove (1531.66) 
+* Adidas-Yeezy-Boost-350-Low-Oxford-Tan (1011.51) 
+* Adidas-Yeezy-Boost-350-Low-Moonrock (996.71) 
+
+
+Next we will find out how many buyer regions there are and what are they:
+```{r}
+sneakers %>% 
+  count(buyer_region) %>%
+  arrange(-n)
+```
+
+There are a total of 51 regions where the shoes in the data set was sold, where the top regions with the most sales are: 
+* California (19349) 
+* New York (16525) 
+* Oregon (7681) 
+
+
+The regions for the most part are states, however District of Colombia is considered a region in this data set, which is not a state but rather the capital of the U.S.
+
+
+
+
+Total sales per sneaker (useful)
+```{r}
+sneakers %>%
+  count(sneaker_name) %>%
+  mutate(sneaker_name = fct_reorder(sneaker_name, n)) %>%
+  ggplot(aes(sneaker_name, n)) + 
+  geom_col(fill = "limegreen") + 
+  labs(title = "Total Sales Per Sneaker", x = "Sneaker Name", y = "Number of Shoes") + 
+  coord_flip()
+```
+Total sales per state (number of shoes) (useful)
+```{r}
+sneakers %>%
+  group_by(buyer_region) %>%
+  count() %>%
+  ggplot(aes(reorder(buyer_region, n), n)) + 
+  geom_col(fill = "limegreen") + 
+  labs(title = "Total Number of Shoes Sold Per State", x = "State", y = "Number of Shoes") + 
+  coord_flip()
+```
+
+Total sales per state (sum of money) (useful)
+```{r}
+sneakers %>%
+  group_by(buyer_region) %>%
+  summarise(total_purchased = sum(sale_price)) %>%
+  ggplot(aes(reorder(buyer_region, total_purchased), total_purchased)) + 
+  geom_col(fill = "limegreen") + 
+  scale_y_continuous(labels = scales::dollar_format()) + 
+  labs(title = "Total Sales Per State", x = "State", y = "Total in Sales (Dollars)") + 
+  coord_flip()
+```
+Average sale price per state (useful)
+```{r}
+sneakers %>%
+  group_by(buyer_region) %>%
+  summarise(avg_purchased = mean(sale_price)) %>% 
+  ggplot(aes(reorder(buyer_region, avg_purchased), avg_purchased)) + 
+  geom_col(fill = "limegreen") + 
+  scale_y_continuous(labels = scales::dollar_format()) + 
+  labs(title = "Average Sale Price Per State", x = "State", y = "Average Shoe Price (Dollar)") + 
+  coord_flip()
+```
+State that bought the most expensive shoe (not really needed)
+State that bought the cheapest shoe (not really needed)
+Average shoe size by state (useful)
+```{r}
+sneakers %>%
+  select(buyer_region, shoe_size) %>%
+  group_by(buyer_region) %>%
+  summarise(avg_shoe_size = mean(shoe_size)) %>%
+  ggplot(aes(reorder(buyer_region, avg_shoe_size), avg_shoe_size)) +
+  geom_point(color = "limegreen") + 
+  labs(title = "Average Shoe Size by State", x = "State", y = "Average Shoe Size") +
+  coord_flip()
+```
+Total number of sales per shoe size (useful)
+```{r}
+sneakers %>%
+  group_by(shoe_size) %>%
+  count() %>%
+  ggplot(aes(shoe_size, n)) + 
+  geom_point(color = "limegreen", size = 3) + 
+  scale_x_continuous(breaks = 3:17) + 
+  labs(title = "Total Number of Sales Per Shoe Size", x = "Shoe Size", y = "Number of Sales")
+```
+Shoe size with the most percent profit (useful)
+```{r}
+sneakers %>%
+  select(shoe_size, profit_perc) %>%
+  group_by(shoe_size) %>%
+  ggplot(aes(x = shoe_size, y = profit_perc)) +
+  geom_point(color = "limegreen") + 
+  scale_x_continuous(breaks = 3:17) +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  labs(title = "Total Profit Percent Per Shoe Size", x = "Shoe Size", y = "Percent of Profit")
+```
+Average profit percent per shoe size (useful)
+```{r}
+sneakers %>%
+  select(shoe_size, profit_perc) %>%
+  group_by(shoe_size) %>%
+  summarise(avg_profit_perc = round(mean(profit_perc))) %>%
+  ggplot(aes(x = shoe_size, y = avg_profit_perc)) +
+  geom_col(fill = "limegreen") + 
+  scale_x_continuous(breaks = 3:17) +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  labs(title = "Average Profit Percent Per Shoe Size", x = "Shoe Size", y = "Average Percent of Profit")
+```
+Average sale price per shoe size (useful)
+```{r}
+sneakers %>% 
+  select(shoe_size, sale_price) %>%
+  group_by(shoe_size) %>%
+  summarise(avg_sale_price = round(mean(sale_price))) %>%
+  ggplot(aes(x = shoe_size, y = avg_sale_price)) + 
+  geom_col(fill = "limegreen") +
+  scale_x_continuous(breaks = 3:17) + 
+  scale_y_continuous(labels = scales::dollar_format()) + 
+  labs(title = "Average Sale Price Per Shoe Size", x = "Shoe Size", y ="Average Sale Price")
+```
+shoes sold for a loss (dont really need)
+when were shoes sold for a loss (might be useful)
+```{r}
+sneakers %>%
+  filter(sale_price < retail_price) %>%
+  ggplot(aes(x = as.numeric(weeks), y = profit_perc)) +
+  geom_point(color = "limegreen") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  labs(title = "Weeks when Shoes Sold For a Loss", x = "Weeks", y = "Percent of Profit")
+```
+when were shoes sold for most profit (useful)
+```{r}
+sneakers %>%
+  ggplot(aes(x = as.numeric(weeks), y = profit_perc, color = factor(brand))) +
+  geom_point() +
+  scale_colour_manual(values = c("#7CFC00", "#228B22")) +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) + 
+  labs(title = "Weeks when Shoes Sold for Most Profit", x = "Weeks", y = "Percent of Profit")
+```
+when were most shoes sold (useful)
+```{r}
+sneakers %>%
+  group_by(weeks) %>%
+  count() %>%
+  ggplot(aes(as.numeric(weeks), n)) + 
+  geom_point(color = "limegreen", size = 3) +
+  labs(title = "Weeks when the Most Shoes Were Sold", x = "Weeks", y = "Number of Shoes")
+```
+which day of the week sells most shoes (useful)
+```{r}
+sneakers %>%
+  group_by(day_of_week) %>%
+  count() %>%
+  ggplot(aes(reorder(day_of_week, n), n)) +
+  geom_col(fill = "limegreen") +
+  labs(title = "Number of Shoes Sold Per Weekday", x = "Weekday", y = "Number of Shoes") + 
+  coord_flip()
+```
+which day of week sells for most average profit (useful)
+
+```{r}
+sneakers %>%
+  group_by(release_date) %>%
+  count()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
