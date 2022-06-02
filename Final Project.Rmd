@@ -69,7 +69,6 @@ sneakers$order_date <- as.Date(sneakers$order_date, "%m/%d/%y")
 
 # Release.Date from chr to date
 sneakers$release_date <- as.Date(sneakers$release_date, "%m/%d/%y")
-class(sneakers$release_date)
 
 #Check for Missing Values in the dataset
 sum(is.na(sneakers))
@@ -91,6 +90,7 @@ sneakers$profit <- sneakers$sale_price - sneakers$retail_price
 # Add the percentage of the profit made
 sneakers$profit_perc <- round((sneakers$profit / sneakers$retail_price) * 100)
 
+view(sneakers)
 ```
 
 
@@ -312,6 +312,25 @@ sneakers %>%
   scale_y_continuous(labels = scales::dollar_format()) + 
   labs(title = "Average Sale Price Per State", x = "State", y = "Average Shoe Price (Dollar)") + 
   coord_flip()
+
+
+sneakers %>%
+  group_by(sneaker_name) %>%
+  summarise(avg_profit = round(mean(profit))) %>%
+  ggplot(aes(reorder(sneaker_name, avg_profit), avg_profit)) +
+  geom_col(fill = "limegreen") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  labs(title = "Average Profit Per Sneaker", x = "Sneaker", y = "Average Profit") +
+  coord_flip()
+
+sneakers %>%
+  group_by(sneaker_name) %>%
+  summarise(avg_profit_perc = round(mean(profit_perc))) %>%
+  ggplot(aes(reorder(sneaker_name, avg_profit_perc), avg_profit_perc)) +
+  geom_col(fill = "limegreen") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  labs(title = "Average Percent of Profit Per Sneaker", x = "Sneaker", y = "Average Percent of Profit") + 
+  coord_flip()
 ```
 State that bought the most expensive shoe (not really needed)
 State that bought the cheapest shoe (not really needed)
@@ -413,8 +432,12 @@ which day of week sells for most average profit (useful)
 
 ```{r}
 sneakers %>%
-  group_by(release_date) %>%
-  count()
+  group_by(day_of_week) %>%
+  summarise(avg_profit_perc = round(mean(profit_perc))) %>% 
+  ggplot(aes(reorder(x = day_of_week, avg_profit_perc), y = avg_profit_perc)) + 
+  geom_col(fill = "limegreen") +
+  labs(title = "Average Profit Percent per Weekday", x = "Weekday", y = "Average Percent of Profit") +
+  coord_flip()
 ```
 
 
@@ -430,7 +453,8 @@ sneakers %>%
 
 
 
-
+```{r}
+```
 
 
 
