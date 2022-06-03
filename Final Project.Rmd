@@ -50,7 +50,7 @@ sneakers <- read.csv("Data/StockX-Data.csv")
 
 
 ### Cleaning the Data
-Next we will do some cleaning. After reading the file in I noticed that there were certain variables that were read in as characters, however they will need to be used integers therefore we will be converting them as integers before we continue. Likewise the dates that are provided were read in as characters and we will have to switch them to be read as a date format.
+Next we will do some cleaning. After reading the file in I noticed that there were certain variables that were read in as characters, however they will need to be used as integers therefore we will be converting them to integers before we continue. Likewise the dates that are provided were read in as characters and we will have to switch them to be read as a date format.
 ```{r}
 # Clean names
 sneakers <- sneakers %>%
@@ -84,13 +84,11 @@ sneakers$weeks <- round(difftime(sneakers$order_date, sneakers$release_date, uni
 # Add in the day of the week that the shoe was ordered/purchased
 sneakers$day_of_week <- format(as.Date(sneakers$order_date), "%A")
 
-# Add how much prfit was made on each sale
+# Add how much profit was made on each sale
 sneakers$profit <- sneakers$sale_price - sneakers$retail_price
 
 # Add the percentage of the profit made
 sneakers$profit_perc <- round((sneakers$profit / sneakers$retail_price) * 100)
-
-view(sneakers)
 ```
 
 
@@ -329,11 +327,12 @@ sneakers %>%
   ggplot(aes(reorder(sneaker_name, avg_profit_perc), avg_profit_perc)) +
   geom_col(fill = "limegreen") +
   scale_y_continuous(labels = function(x) paste0(x, "%")) +
-  labs(title = "Average Percent of Profit Per Sneaker", x = "Sneaker", y = "Average Percent of Profit") + 
+  labs(title = "Average Profit Percentage Per Sneaker", x = "Sneaker", y = "Average Percent of Profit") + 
   coord_flip()
 ```
 State that bought the most expensive shoe (not really needed)
 State that bought the cheapest shoe (not really needed)
+
 Average shoe size by state (useful)
 ```{r}
 sneakers %>%
@@ -442,25 +441,49 @@ sneakers %>%
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+### Data Splitting 
 ```{r}
+#Convert variables to factors
+sneakers$brand <- as.factor(sneakers$brand)
+sneakers$sneaker_name <- as.factor(sneakers$sneaker_name)
+sneakers$shoe_size <- as.factor(sneakers$shoe_size)
+sneakers$buyer_region <- as.factor(sneakers$buyer_region)
+sneakers$day_of_week <- as.factor(sneakers$day_of_week)
+sneakers$weeks <- as.numeric(sneakers$weeks)
+sneakers
 ```
 
 
+Next we split the data and stratify it. Afterwards the split data will be assigned as training or testing. And before creating the recipe, I will fold my training data into 10 folds, with 5 repeats.
+
+```{r}
+set.seed(0714)
+
+# Split the data 
+sneakers_split <- initial_split(sneakers, strata = profit_perc, prop = 0.7)
+
+# Assign the training and testing data
+sneakers_train <- training(sneakers_split)
+sneakers_test <- testing(sneakers_split)
+
+# V-fold cross validation
+sneakers_fold <- vfold_cv(sneakers_train, strata = profit_perc, v = 10, repeats = 5)
+
+```
 
 
-
-
+Finally, we will create our recipe that will be predicting the profit percentage of the shoe sales, given the variables seen in the code below.
+```{r}
+sneakers_recipe <- recipe(
+  # predict the profit percent using all the predictors except, profit, release_date, order_date.
+  # weeks will account for the dates that are not being included
+  # will use the training data set for this recipe
+  profit_perc ~ brand + sneaker_name + sale_price + retail_price + buyer_region + shoe_size + weeks + day_of_week, data = sneakers_train) %>%
+  # dummy code all the variables
+  step_dummy(all_nominal_predictors()) %>%
+  # scale and center all the predictor variables
+  step_normalize(all_predictors())
+```
 
 
 
