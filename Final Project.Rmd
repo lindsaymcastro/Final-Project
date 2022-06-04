@@ -486,6 +486,13 @@ sneakers_recipe <- recipe(
 ```
 
 
+```{r}
+sneakers_train2 <- sneakers_train[,sapply(sneakers_train, is.numeric)]
+sneakers_train2 %>%
+  cor() %>%
+  corrplot(type = "lower", diag = FALSE,
+           method = 'color', addCoef.col = "Black")
+```
 
 
 
