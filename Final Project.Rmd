@@ -100,7 +100,8 @@ sneakers %>%
 
 sneakers %>%
   count(shoe_size) %>%
-  arrange(-n)
+  arrange(-n) %>%
+  head()
 ```
 
 
@@ -115,8 +116,8 @@ There are 26 different shoe sizes in the dataset. The top three sizes across the
 sneakers %>%
   select(brand) %>%
   distinct() %>%
-  group_by()
-
+  group_by() %>%
+  head()
 ```
 
 There are only two brands within the 99,956 different observations found in this dataset: Yeezy and Off-White.
@@ -136,7 +137,8 @@ offwhite %>%
 
 offwhite %>%
   count(shoe_size) %>%
-  arrange(-n)
+  arrange(-n) %>%
+  head()
 ```
 This Off-White dataset is missing the size 13.0 and 14.5, therefore there are only 24 sizes as opposed to 26. The top three sizes with the most shoes for Off-White are: 
 * 10 (3654) 
@@ -161,7 +163,8 @@ yeezy %>%
 
 yeezy %>%
   count(shoe_size) %>%
-  arrange(-n)
+  arrange(-n) %>%
+  head()
 ```
 This Yeezy dataset is missing the size 15, therefore there are only 25 sizes as opposed to 26. The top three sizes with the most shoes for Yeezy are: 
 * 10 (7439) 
@@ -174,7 +177,8 @@ Within each brand there are different types of sneakers. Next we will look throu
 #Find the number of sneakers listed for Off-White and the quantities of each.
 offwhite %>%
   count(sneaker_name) %>%
-  arrange(-n)
+  arrange(-n)%>%
+  head()
 ```
 
 For the Off-White brand there are 30 individual sneaker types, where the sneakers with the most sales are: 
@@ -186,7 +190,8 @@ For the Off-White brand there are 30 individual sneaker types, where the sneaker
 #Find the number of sneakers listed for Yeezy and the quantities of each.
 yeezy %>%
   count(sneaker_name) %>%
-  arrange(-n)
+  arrange(-n) %>%
+  head()
 ```
 
 For the Yeezy brand there are 20 individual sneaker types, where the sneakers with the most sales are: 
@@ -200,17 +205,12 @@ In total there are 50 different kinds of sneakers across 2 different brands, 30 
 
 
 ```{r}
-# Find average sale and retail price and max sale price for each sneaker, arranged by highest sale price to lowest
-offwhite %>%
-  group_by(sneaker_name) %>%
-  summarize(avg_retail_price=mean(retail_price), avg_sale_price=mean(sale_price), max_sale_price=max(sale_price)) %>%
-  arrange(-max_sale_price)
-
 # Find average sale and retail price and max sale price for each sneaker, arranged by highest average sale price to lowest
 offwhite %>%
   group_by(sneaker_name) %>%
   summarize(avg_retail_price=mean(retail_price), avg_sale_price=mean(sale_price), max_sale_price=max(sale_price)) %>%
-  arrange(-avg_sale_price)
+  arrange(-avg_sale_price) %>%
+  head()
 ```
 
 The most expensive sales for Off-White shoes are:
@@ -226,17 +226,12 @@ The most expensive Off-White shoes on average for sales price are:
 
 
 ```{r}
-# Find average sale and retail price and max sale price for each sneaker, arranged by highest sale price to lowest
-yeezy %>%
-  group_by(sneaker_name) %>%
-  summarize(avg_retail_price=mean(retail_price), avg_sale_price=mean(sale_price), max_sale_price=max(sale_price)) %>%
-  arrange(-max_sale_price)
-
 # Find average sale and retail price and max sale price for each sneaker, arranged by highest average sale price to lowest
 yeezy %>%
   group_by(sneaker_name) %>%
   summarize(avg_retail_price=mean(retail_price), avg_sale_price=mean(sale_price), max_sale_price=max(sale_price)) %>%
-  arrange(-avg_sale_price)
+  arrange(-avg_sale_price) %>%
+  head()
 ```
 
 The most expenisive sales for Yeezy shoes are: 
@@ -254,7 +249,8 @@ Next we will find out how many buyer regions there are and what are they:
 ```{r}
 sneakers %>% 
   count(buyer_region) %>%
-  arrange(-n)
+  arrange(-n) %>%
+  head()
 ```
 
 There are a total of 51 regions where the shoes in the data set was sold, where the top regions with the most sales are: 
@@ -310,8 +306,10 @@ sneakers %>%
   scale_y_continuous(labels = scales::dollar_format()) + 
   labs(title = "Average Sale Price Per State", x = "State", y = "Average Shoe Price (Dollar)") + 
   coord_flip()
+```
 
-
+Profit by Sneakers (percent and amount)
+```{r}
 sneakers %>%
   group_by(sneaker_name) %>%
   summarise(avg_profit = round(mean(profit))) %>%
@@ -330,8 +328,7 @@ sneakers %>%
   labs(title = "Average Profit Percentage Per Sneaker", x = "Sneaker", y = "Average Percent of Profit") + 
   coord_flip()
 ```
-State that bought the most expensive shoe (not really needed)
-State that bought the cheapest shoe (not really needed)
+
 
 Average shoe size by state (useful)
 ```{r}
@@ -389,7 +386,7 @@ sneakers %>%
   scale_y_continuous(labels = scales::dollar_format()) + 
   labs(title = "Average Sale Price Per Shoe Size", x = "Shoe Size", y ="Average Sale Price")
 ```
-shoes sold for a loss (dont really need)
+
 when were shoes sold for a loss (might be useful)
 ```{r}
 sneakers %>%
@@ -446,11 +443,10 @@ sneakers %>%
 #Convert variables to factors
 sneakers$brand <- as.factor(sneakers$brand)
 sneakers$sneaker_name <- as.factor(sneakers$sneaker_name)
-sneakers$shoe_size <- as.factor(sneakers$shoe_size)
+# sneakers$shoe_size <- as.factor(sneakers$shoe_size)
 sneakers$buyer_region <- as.factor(sneakers$buyer_region)
 sneakers$day_of_week <- as.factor(sneakers$day_of_week)
 sneakers$weeks <- as.numeric(sneakers$weeks)
-sneakers
 ```
 
 
@@ -469,6 +465,14 @@ sneakers_test <- testing(sneakers_split)
 # V-fold cross validation
 sneakers_fold <- vfold_cv(sneakers_train, strata = profit_perc, v = 10, repeats = 5)
 
+sneakers_train2 <- sneakers_train[,sapply(sneakers_train, is.numeric)]
+sneakers_train2 %>%
+  cor() %>%
+  corrplot(type = "lower", diag = FALSE,
+           method = 'color', addCoef.col = "Black")
+
+head(sneakers_train)
+
 ```
 
 
@@ -478,7 +482,7 @@ sneakers_recipe <- recipe(
   # predict the profit percent using all the predictors except, profit, release_date, order_date.
   # weeks will account for the dates that are not being included
   # will use the training data set for this recipe
-  profit_perc ~ brand + sneaker_name + sale_price + retail_price + buyer_region + shoe_size + weeks + day_of_week, data = sneakers_train) %>%
+  profit_perc ~ brand + sneaker_name + retail_price + buyer_region + shoe_size + weeks + day_of_week, data = sneakers_train) %>%
   # dummy code all the variables
   step_dummy(all_nominal_predictors()) %>%
   # scale and center all the predictor variables
@@ -486,12 +490,45 @@ sneakers_recipe <- recipe(
 ```
 
 
-```{r}
-sneakers_train2 <- sneakers_train[,sapply(sneakers_train, is.numeric)]
-sneakers_train2 %>%
-  cor() %>%
-  corrplot(type = "lower", diag = FALSE,
-           method = 'color', addCoef.col = "Black")
+
+#### Linear Regression Model 
+```{r, warning=FALSE}
+# Create the model
+lm_model <- linear_reg() %>%
+  set_engine("lm")
+
+# Create the workflow
+lm_wf <- workflow() %>%
+  add_model(lm_model) %>%
+  add_recipe(sneakers_recipe)
+
+# Fit model to training set
+lm_fit <- fit(lm_wf, sneakers_train)
+
+# View the results (don't really need)
+lm_fit %>%
+  extract_fit_parsnip() %>%
+  tidy()
+
+# Table w/ predicted and actual values
+sneakers_train_res <- predict(lm_fit, new_data = sneakers_train %>% select(-profit_perc))
+
+sneakers_train_res <- bind_cols(sneakers_train_res, sneakers_train %>% select(profit_perc))
+sneakers_train_res %>%
+  head()
+
+# Metric Set w/ RMSE, MSE, R^2
+sneakers_metrics <- metric_set(rmse, rsq, mae)
+sneakers_metrics(sneakers_train_res, truth = profit_perc, 
+                 estimate = .pred)
+
+# Plot for Predicted vs Actual Values
+sneakers_train_res %>%
+  ggplot(aes(x = .pred, y = profit_perc)) +
+  geom_point(alpha = 0.2) +
+  geom_abline(lty = 2) +
+  theme_bw() +
+  coord_obs_pred()
 ```
 
 
