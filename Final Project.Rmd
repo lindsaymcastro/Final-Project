@@ -489,7 +489,7 @@ sneakers_recipe <- recipe(
   step_normalize(all_predictors())
 ```
 
-
+### Modeling
 
 #### Linear Regression Model 
 ```{r, warning=FALSE}
@@ -532,9 +532,43 @@ sneakers_train_res %>%
 ```
 
 
+#### Decision Tree 
+```{r, message=FALSE}
+# Create the model
+reg_tree_spec <- decision_tree() %>%
+  set_engine("rpart") %>%
+  set_mode("regression")
+
+# Create the workflow
+reg_tree_wf <- workflow() %>%
+  add_model(reg_tree_spec %>% set_args(cost_complexity = tune())) %>%
+  add_recipe(sneakers_recipe)
+
+param_grid_dt <- grid_regular(cost_complexity(range = c(-4, -1)), levels = 10)
+
+tune_res_dt <- tune_grid(
+  reg_tree_wf, 
+  resamples = sneakers_fold, 
+  grid = param_grid_dt,
+  control = control_grid(verbose = TRUE)
+)
+
+autoplot(tune_res_dt)
 
 
+```
 
+```{r}
+best_complexity <-select_best(tune_res_dt, metric = "rmse")
+
+reg_tree_final <- finalize_workflow(reg_tree_wf, best_complexity)
+
+reg_tree_final_fit <- fit(reg_tree_final, data = sneakers_train)
+
+reg_tree_final_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot()
+```
 
 
 
