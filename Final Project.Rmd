@@ -39,6 +39,7 @@ library(rpart)
 library(ranger)
 library(vip)
 library(lubridate)
+library(kernlab)
 tidymodels_prefer()
 ```
 
@@ -567,8 +568,125 @@ reg_tree_final_fit <- fit(reg_tree_final, data = sneakers_train)
 
 reg_tree_final_fit %>%
   extract_fit_engine() %>%
-  rpart.plot()
+  rpart.plot(roundint = FALSE)
+
+collect_metrics(tune_res_dt)%>%
+  arrange(std_err)
+
+best_complexity
 ```
+
+
+
+
+### Support Vector Machines 
+```{r}
+
+```
+
+
+
+### Ridge Regression 
+```{r,message=FALSE}
+# Create a model
+ridge_spec <- 
+  linear_reg(penalty = tune(), mixture = 0) %>%
+  set_mode("regression") %>%
+  set_engine("glmnet")
+
+# Create a workflow 
+ridge_wf <- workflow() %>%
+  add_recipe(sneakers_recipe) %>%
+  add_model(ridge_spec)
+
+penalty_grid_r <- grid_regular(penalty(range = c(-5, 5)), levels = 50)
+penalty_grid_r
+
+tune_res_ridge <- tune_grid(
+  ridge_wf, 
+  resamples = sneakers_fold, 
+  grid = penalty_grid_r,
+  control = control_grid(verbose = TRUE)
+)
+
+autoplot(tune_res_ridge)
+
+```
+
+```{r}
+collect_metrics(tune_res_ridge)
+
+best_penalty_r <- select_best(tune_res_ridge, metric = "rsq")
+best_penalty_r
+
+ridge_final <- finalize_workflow(ridge_wf, best_penalty_r)
+
+ridge_final_fit <- fit(ridge_final, data = sneakers_train)
+
+```
+
+
+
+
+### Lasso Regression
+```{r,message=FALSE}
+# Create the model
+lasso_spec <- 
+  linear_reg(penalty = tune(), mixture = 1) %>%
+  set_mode("regression") %>%
+  set_engine("glmnet")
+
+# Create the workflow 
+lasso_wf <- workflow() %>%
+  add_recipe(sneakers_recipe) %>%
+  add_model(lasso_spec)
+
+penalty_grid_l <- grid_regular(penalty(range = c(-2, 2)), levels = 50)
+
+tune_res_lasso <- tune_grid(
+  lasso_wf, 
+  resamples = sneakers_fold, 
+  grid = penalty_grid_l,
+  control = control_grid(verbose = TRUE)
+)
+
+autoplot(tune_res_lasso)
+```
+
+```{r}
+collect_metrics(tune_res_lasso)
+
+best_penalty_l <- select_best(tune_res_lasso, metric = "rsq")
+best_penalty_l
+
+lasso_final <- finalize_workflow(lasso_wf, best_penalty_l)
+
+lasso_final_fit <- fit(lasso_final, data = sneakers_train)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
