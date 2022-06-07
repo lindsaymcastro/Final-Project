@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE,
 
 
 Libraries Used for this Project
-```{r,message=FALSE}
+```{r,message=FALSE, warning=FALSE}
 library(readr)
 library(tidyverse)
 library(tidymodels)
@@ -40,6 +40,7 @@ library(ranger)
 library(vip)
 library(lubridate)
 library(kernlab)
+library(kknn)
 tidymodels_prefer()
 ```
 
@@ -577,17 +578,17 @@ best_complexity
 ```
 
 
-
-
-### Support Vector Machines 
+### Random Forest 
 ```{r}
 
 ```
 
 
 
+
+
 ### Ridge Regression 
-```{r,message=FALSE}
+```{r,message=FALSE, warning=FALSE}
 # Create a model
 ridge_spec <- 
   linear_reg(penalty = tune(), mixture = 0) %>%
@@ -629,7 +630,7 @@ ridge_final_fit <- fit(ridge_final, data = sneakers_train)
 
 
 ### Lasso Regression
-```{r,message=FALSE}
+```{r,message=FALSE, warning=FALSE}
 # Create the model
 lasso_spec <- 
   linear_reg(penalty = tune(), mixture = 1) %>%
@@ -666,12 +667,49 @@ lasso_final_fit <- fit(lasso_final, data = sneakers_train)
 ```
 
 
+### Nearest Neighbors 
+```{r}
+# Create the model 
+knn_model <- nearest_neighbor(
+  neighbors = tune(),
+  mode = "regression") %>%
+  set_engine("kknn")
+
+# Create the workflow 
+knn_wf <- workflow() %>%
+  add_model(knn_model) %>%
+  add_recipe(sneakers_recipe)
+
+# Set-up tuning grid
+knn_params <- parameters(knn_model)
+
+# Define grid
+knn_grid <- grid_regular(knn_params, levels = 2)
+
+# Tune the grid
+knn_tune <- knn_wf %>%
+  tune_grid(
+    resamples = sneakers_fold,
+    grid = knn_grid,
+    control = control_grid(verbose = TRUE)
+)
+
+autoplot(knn_tune, metric = "rmse")
 
 
 
 
+```
 
+```{r}
+collect_metrics(knn_tune)
 
+best_knn <- select_best(knn_tune, metric = "rsq")
+
+knn_final <- finalize_workflow(knn_wf, best_knn)
+
+knn_final_fit <- fit(knn_final, data = sneakers_train)
+```
 
 
 
