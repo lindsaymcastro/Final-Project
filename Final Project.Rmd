@@ -1,10 +1,11 @@
 ---
 title: "Final Project"
+author: "Lindsay Castro"
 output:
   html_document:
-    toc: yes
-    toc_float: yes
-    code_folding: show
+    toc: true
+    toc_float: true
+    code_folding: hide
   pdf_document:
     toc: yes
 ---
@@ -13,6 +14,15 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE,
                       warning = FALSE)
 ```
+
+
+## Introduction 
+The following project will be analyzing data to be able to predict the profit percentage that the company StockX is proposed to make from the shoes that they resell. The data will be explored analytically to be able to understand the variance within and between variables. Through stratified sampling the data will be split and cross validation will be used as well to be able to fit into various machine learning models. After comparing models, the testing data will be fit to the model that produces the best RMSE and R^2 value. 
+
+### What is StockX? 
+StockX is a online marketplace that mainly focuses on reselling sneakers. As a consumer, you are not only able to buy but also sell your own pair of sneakers. 
+
+StockX is a third party platform that primarily buys and sells shoes. For people who are not familiar with the sneaker industry, it can be helpful to think of the StockX business as such: think of a shoe as a stock where different factors affect the price of the shoe at a certain time. For stocks, certain socioeconomic factors such as investor demand influence the price of stocks. If the number of buy orders outnumber the number of sell orders, stock prices rise, and vice versa. The same holds true for shoes, where different factors such as innovation or the name/brand associated with the shoe influence how valuable a shoe is within the shoe market. Organizations such as Yeezy and Offwhite (brands used in this data set) implement basic supply and demand techniques by limiting scale production to increase demand and value for their shoes and other items. 
 
 
 Libraries Used for this Project
@@ -45,13 +55,13 @@ tidymodels_prefer()
 ```
 
 
-Read the data file into R. This file was a csv file.
+Read the data file into R. This file was a csv file. I found this file on the StockX website that challenged its audience in 2019 to enter a data contest using the same data that is used for this project. The link to the original website can be found [here] (https://stockx.com/news/the-2019-data-contest/).
 ```{r}
 sneakers <- read.csv("Data/StockX-Data.csv")
 ```
 
 
-### Cleaning the Data
+## Cleaning the Data 
 Next we will do some cleaning. After reading the file in I noticed that there were certain variables that were read in as characters, however they will need to be used as integers therefore we will be converting them to integers before we continue. Likewise the dates that are provided were read in as characters and we will have to switch them to be read as a date format.
 ```{r}
 # Clean names
@@ -78,7 +88,8 @@ sum(is.na(sneakers))
 
 There are no missing values within the data set, therefore we will continue to use the entire data set. 
 
-### Adding additional information for further analysis
+### Adding additional information for further analysis 
+There are a couple new variables that can be added to this data set that can further enhance the analysis. As of right now, the variables containing dates serve us no purpose however we can convert them to weeks relative to each other to be able to incorporate them into our analysis. Similarly, we can use the days of the week that each shoe was ordered to see if it influences the profit percentage in any way. Another very important variable that is missing in this data set is the profit that each shoe makes. This can easily be calculated by finding the difference between the sale price and the retail price of each shoe. Likewise the profit percentage can be calculated as well by dividing the profit by the retail price of each shoe. 
 ```{r}
 # Add the number of weeks between the release date and the order date
 sneakers$weeks <- round(difftime(sneakers$order_date, sneakers$release_date, units = "weeks"))
@@ -94,26 +105,24 @@ sneakers$profit_perc <- round((sneakers$profit / sneakers$retail_price) * 100)
 ```
 
 
-### Exploratory Data Analysis (EDA)
+## Exploratory Data Analysis (EDA) 
+The entire exploratory data analysis will be done on the entire data set. The data set overall has 99,956 observations, with originally 8 variables, however after adding new variables to the data set it actually has 12 variables. Each observation represents the sale of a single shoe. 
 
+
+Shoe Size 
 ```{r}
-sneakers %>%
-  summary()
-
 sneakers %>%
   count(shoe_size) %>%
   arrange(-n) %>%
   head()
 ```
-
-
-Shoe Size
 There are 26 different shoe sizes in the dataset. The top three sizes across the entire data set are:
 * 10 (11093) 
 * 9 (9706) 
 * 11 (9251) 
 
 
+Brands 
 ```{r}
 sneakers %>%
   select(brand) %>%
@@ -121,26 +130,24 @@ sneakers %>%
   group_by() %>%
   head()
 ```
-
 There are only two brands within the 99,956 different observations found in this dataset: Yeezy and Off-White.
 
 
 
-Next we will be separating the two brands into their own data frames to be able to analyze them separately.
+Next we will be separating the two brands into their own data frames to be able to analyze them separately. 
+
+Off-White 
 ```{r}
 # Create a new data frame for all the Off-White brand sneakers
 offwhite <- sneakers %>%
   select(order_date, brand, sneaker_name, sale_price, retail_price, release_date, shoe_size, buyer_region, weeks, day_of_week, profit, profit_perc) %>%
   filter(brand == "Off-White")
 
-# Summary of the data fram
-offwhite %>%
-  summary()
-
 offwhite %>%
   count(shoe_size) %>%
   arrange(-n) %>%
   head()
+
 ```
 This Off-White dataset is missing the size 13.0 and 14.5, therefore there are only 24 sizes as opposed to 26. The top three sizes with the most shoes for Off-White are: 
 * 10 (3654) 
@@ -148,6 +155,7 @@ This Off-White dataset is missing the size 13.0 and 14.5, therefore there are on
 * 9 (2703) 
 
 
+Yeezy 
 ```{r}
 # Yeezy dataframe
 
@@ -158,10 +166,6 @@ sneakers$brand <- gsub(" ", "", sneakers$brand)
 yeezy <- sneakers %>%
   select(order_date, brand, sneaker_name, sale_price, retail_price, release_date, shoe_size, buyer_region, weeks, day_of_week, profit, profit_perc) %>%
   filter(brand == "Yeezy")
-
-# Sumamry of the data frame
-yeezy %>%
-  summary()
 
 yeezy %>%
   count(shoe_size) %>%
@@ -174,7 +178,7 @@ This Yeezy dataset is missing the size 15, therefore there are only 25 sizes as 
 * 9.5 (6430) 
 
 
-Within each brand there are different types of sneakers. Next we will look through each of the dataframes for both brands to see how many individual sneakers there are.
+Within each brand there are different types of sneakers. Next we will look through each of the data frames for both brands to see how many individual sneakers there are.
 ```{r}
 #Find the number of sneakers listed for Off-White and the quantities of each.
 offwhite %>%
@@ -205,7 +209,7 @@ For the Yeezy brand there are 20 individual sneaker types, where the sneakers wi
 In total there are 50 different kinds of sneakers across 2 different brands, 30 for Off-White, and 20 for Yeezy. 
 
 
-
+Next we will look at sales for both the Off-White brand and the Yeezy brand, and compare them to the average retail price, average sale price, and max sale price for each shoe and their kind.
 ```{r}
 # Find average sale and retail price and max sale price for each sneaker, arranged by highest average sale price to lowest
 offwhite %>%
@@ -214,6 +218,7 @@ offwhite %>%
   arrange(-avg_sale_price) %>%
   head()
 ```
+Based on our output we conclude the follwoing:  
 
 The most expensive sales for Off-White shoes are:
 * Air-Jordan-1-Retro-High-Off-White-Chicago (4050) 
@@ -265,8 +270,11 @@ The regions for the most part are states, however District of Colombia is consid
 
 
 
+In this next section we will look at the different variables and observe how they perform overall, in order to determine any form of correlation.
 
-Total sales per sneaker (useful)
+#### Sneakers
+
+The following graph shows the number of shoes sold for each of the different sneaker types. It is evident that there are certain shoes that are more popular than others. 
 ```{r}
 sneakers %>%
   count(sneaker_name) %>%
@@ -276,7 +284,24 @@ sneakers %>%
   labs(title = "Total Sales Per Sneaker", x = "Sneaker Name", y = "Number of Shoes") + 
   coord_flip()
 ```
-Total sales per state (number of shoes) (useful)
+
+
+This next graph shoes the profit that was made for each individual shoe. Here we can notice that the shoes with the most profit do not exactly match the most popular shoes, therefore we can conclude that some shoes run for higher prices, and are available in smaller quantities.  
+```{r}
+sneakers %>%
+  group_by(sneaker_name) %>%
+  summarise(avg_profit = round(mean(profit))) %>%
+  ggplot(aes(reorder(sneaker_name, avg_profit), avg_profit)) +
+  geom_col(fill = "limegreen") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  labs(title = "Average Profit Per Sneaker", x = "Sneaker", y = "Average Profit") +
+  coord_flip()
+```
+ 
+#### Buyer Regions 
+The nest few graphs will look into the statistics for the buyer regions, or in other words the states. We would like to see if the location of the buy has any importance in the way that it influences the sales of the shoes. 
+
+In this first graph, we examine the number of shoes sold in each state. It is clear that California has a high number of sales, with New York following. 
 ```{r}
 sneakers %>%
   group_by(buyer_region) %>%
@@ -287,7 +312,7 @@ sneakers %>%
   coord_flip()
 ```
 
-Total sales per state (sum of money) (useful)
+This graph shows the total amount in sales that each state made. It is observed that the number of sales are correlated with the total amount of money made from sales.  
 ```{r}
 sneakers %>%
   group_by(buyer_region) %>%
@@ -298,7 +323,8 @@ sneakers %>%
   labs(title = "Total Sales Per State", x = "State", y = "Total in Sales (Dollars)") + 
   coord_flip()
 ```
-Average sale price per state (useful)
+
+To further examine the influence of the buyer region we look at the average sale price for a the shoes sold in each state. However, the average sale price also has to do with the types of shoes sold in each state too. 
 ```{r}
 sneakers %>%
   group_by(buyer_region) %>%
@@ -310,29 +336,7 @@ sneakers %>%
   coord_flip()
 ```
 
-Profit by Sneakers (percent and amount)
-```{r}
-sneakers %>%
-  group_by(sneaker_name) %>%
-  summarise(avg_profit = round(mean(profit))) %>%
-  ggplot(aes(reorder(sneaker_name, avg_profit), avg_profit)) +
-  geom_col(fill = "limegreen") +
-  scale_y_continuous(labels = scales::dollar_format()) +
-  labs(title = "Average Profit Per Sneaker", x = "Sneaker", y = "Average Profit") +
-  coord_flip()
-
-sneakers %>%
-  group_by(sneaker_name) %>%
-  summarise(avg_profit_perc = round(mean(profit_perc))) %>%
-  ggplot(aes(reorder(sneaker_name, avg_profit_perc), avg_profit_perc)) +
-  geom_col(fill = "limegreen") +
-  scale_y_continuous(labels = function(x) paste0(x, "%")) +
-  labs(title = "Average Profit Percentage Per Sneaker", x = "Sneaker", y = "Average Percent of Profit") + 
-  coord_flip()
-```
-
-
-Average shoe size by state (useful)
+Likewise, we will also look at the average shoe size that each state buys. This is relevant because some sizes are more attainable than others, therefore we can get an idea of which states perhaps buy rarer shoes. 
 ```{r}
 sneakers %>%
   select(buyer_region, shoe_size) %>%
@@ -343,7 +347,12 @@ sneakers %>%
   labs(title = "Average Shoe Size by State", x = "State", y = "Average Shoe Size") +
   coord_flip()
 ```
-Total number of sales per shoe size (useful)
+
+
+#### Shoe Size 
+After looking at shoe size in states, we will examine the influence that shoe size has on the sales.
+
+In the graph, we notice that there is a normal distribution for the sizes of the shoes which is expected. 
 ```{r}
 sneakers %>%
   group_by(shoe_size) %>%
@@ -353,7 +362,8 @@ sneakers %>%
   scale_x_continuous(breaks = 3:17) + 
   labs(title = "Total Number of Sales Per Shoe Size", x = "Shoe Size", y = "Number of Sales")
 ```
-Shoe size with the most percent profit (useful)
+
+The following graph shows the shoe size with the profit percent that was made on each sale. The scatterplot is utilized to be able to identify shoes that are outliers that contribute to a higher percent profit. 
 ```{r}
 sneakers %>%
   select(shoe_size, profit_perc) %>%
@@ -364,19 +374,8 @@ sneakers %>%
   scale_y_continuous(labels = function(x) paste0(x, "%")) +
   labs(title = "Total Profit Percent Per Shoe Size", x = "Shoe Size", y = "Percent of Profit")
 ```
-Average profit percent per shoe size (useful)
-```{r}
-sneakers %>%
-  select(shoe_size, profit_perc) %>%
-  group_by(shoe_size) %>%
-  summarise(avg_profit_perc = round(mean(profit_perc))) %>%
-  ggplot(aes(x = shoe_size, y = avg_profit_perc)) +
-  geom_col(fill = "limegreen") + 
-  scale_x_continuous(breaks = 3:17) +
-  scale_y_continuous(labels = function(x) paste0(x, "%")) +
-  labs(title = "Average Profit Percent Per Shoe Size", x = "Shoe Size", y = "Average Percent of Profit")
-```
-Average sale price per shoe size (useful)
+
+After looking at the percent profit, it is critical to look over the average sale price that each shoe size sells for. Because larger shoe sizes are harder to acquire it is reasonable to note that they sell for higher prices on average as shown in the graph.
 ```{r}
 sneakers %>% 
   select(shoe_size, sale_price) %>%
@@ -389,16 +388,10 @@ sneakers %>%
   labs(title = "Average Sale Price Per Shoe Size", x = "Shoe Size", y ="Average Sale Price")
 ```
 
-when were shoes sold for a loss (might be useful)
-```{r}
-sneakers %>%
-  filter(sale_price < retail_price) %>%
-  ggplot(aes(x = as.numeric(weeks), y = profit_perc)) +
-  geom_point(color = "limegreen") +
-  scale_y_continuous(labels = function(x) paste0(x, "%")) +
-  labs(title = "Weeks when Shoes Sold For a Loss", x = "Weeks", y = "Percent of Profit")
-```
-when were shoes sold for most profit (useful)
+#### Weeks 
+Lastly, we will analyze how the time of an order compared to the release date of each shoe can affect the sales of each shoe.
+
+The first graph that we used was to see how the percent profit of the two brands across the weeks of their sale. It is also important to note that Off-White sales do not go past 75 weeks, while Yeezy sales do. Also it is seen that Off-White shoes tend to make a higher percentage of profit in comparison to Yeezy. 
 ```{r}
 sneakers %>%
   ggplot(aes(x = as.numeric(weeks), y = profit_perc, color = factor(brand))) +
@@ -407,7 +400,8 @@ sneakers %>%
   scale_y_continuous(labels = function(x) paste0(x, "%")) + 
   labs(title = "Weeks when Shoes Sold for Most Profit", x = "Weeks", y = "Percent of Profit")
 ```
-when were most shoes sold (useful)
+
+Another graph that was made was the following to see what weeks made the most sales in comparison to their release dates. Here it is clear that m,any sales were made close to the release date. 
 ```{r}
 sneakers %>%
   group_by(weeks) %>%
@@ -416,18 +410,20 @@ sneakers %>%
   geom_point(color = "limegreen", size = 3) +
   labs(title = "Weeks when the Most Shoes Were Sold", x = "Weeks", y = "Number of Shoes")
 ```
-which day of the week sells most shoes (useful)
+
+Out of curiosity, a graph displaying which day of the week sold the most shoes was made. Based on the graph, Friday seems to be the most popular day to purchase shoes. 
 ```{r}
 sneakers %>%
   group_by(day_of_week) %>%
   count() %>%
-  ggplot(aes(reorder(day_of_week, n), n)) +
+  ggplot(aes(n, day_of_week)) +
   geom_col(fill = "limegreen") +
   labs(title = "Number of Shoes Sold Per Weekday", x = "Weekday", y = "Number of Shoes") + 
+  scale_y_discrete(limits = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")) + 
   coord_flip()
 ```
-which day of week sells for most average profit (useful)
 
+Although Friday is the day that sells the most shoes, Wednesday is the day that makes the most profit, as seen in the graph.
 ```{r}
 sneakers %>%
   group_by(day_of_week) %>%
@@ -435,24 +431,30 @@ sneakers %>%
   ggplot(aes(reorder(x = day_of_week, avg_profit_perc), y = avg_profit_perc)) + 
   geom_col(fill = "limegreen") +
   labs(title = "Average Profit Percent per Weekday", x = "Weekday", y = "Average Percent of Profit") +
+  scale_x_discrete(limits = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")) + 
   coord_flip()
 ```
 
 
 
-### Data Splitting 
+## Data Splitting 
+After exploring our data and understanding the correlation that the variables have with each other, it is time to split the data. However before we do that it is important to convert certain variables into factors so that we can later use them in our recipe. 
 ```{r}
 #Convert variables to factors
 sneakers$brand <- as.factor(sneakers$brand)
 sneakers$sneaker_name <- as.factor(sneakers$sneaker_name)
-# sneakers$shoe_size <- as.factor(sneakers$shoe_size)
 sneakers$buyer_region <- as.factor(sneakers$buyer_region)
 sneakers$day_of_week <- as.factor(sneakers$day_of_week)
 sneakers$weeks <- as.numeric(sneakers$weeks)
 ```
 
 
-Next we split the data and stratify it. Afterwards the split data will be assigned as training or testing. And before creating the recipe, I will fold my training data into 10 folds, with 5 repeats.
+Next we split the data and stratify it. When we stratify the data we make sure the data is being split evenly and between training and testing data sets. This makes sure that each set contains the same proportions of the response variable to reflect the entire data set overall. This helps the process of modeling because it allows the models to work with a smaller version of the overall data in order to acheive higher accuracy in predictions
+
+### Cross Validation 
+Afterwards the split data will be assigned as training or testing. And before creating the recipe, I will fold my training data into 10 folds, with 2 repeats in order to be able to perform cross validation. Stratified cross validation will enhance the modeling process because it will further break down the training data set into smaller data sets that will be ran to create mini models, and essentially the best model will be used on the overall training data, and this too will help in determining the best model overall with the highest accuracy.
+
+Originally, I had set up my cross validation repeats to equal 5, however, because I was working with a data set with a large amount of observations and many models took a long time to run, I decided that 2 repeats would be more appropriate.
 
 ```{r}
 set.seed(0714)
@@ -465,20 +467,22 @@ sneakers_train <- training(sneakers_split)
 sneakers_test <- testing(sneakers_split)
 
 # V-fold cross validation
-sneakers_fold <- vfold_cv(sneakers_train, strata = profit_perc, v = 10, repeats = 5)
+sneakers_fold <- vfold_cv(sneakers_train, strata = profit_perc, v = 10, repeats = 2)
+```
 
+
+### Correlation Plot 
+Before creating our recipe, a correlation plot will be made in order to examine which variables are positively or negatively correlated with each other. This will provide a vague idea of which variables to use in our recipe to predict our response variable. For this data set I have decided to make the profit percentage the response variable, therefore I will note any variables that have high correlation to the profit percentage. As seen in the plot, sale price and, of course, profit are extremely correlated to the profit percentage, therefore they will not be included in the recipe in order to avoid multicollinearity. 
+```{r}
 sneakers_train2 <- sneakers_train[,sapply(sneakers_train, is.numeric)]
 sneakers_train2 %>%
   cor() %>%
   corrplot(type = "lower", diag = FALSE,
            method = 'color', addCoef.col = "Black")
-
-head(sneakers_train)
-
 ```
 
 
-Finally, we will create our recipe that will be predicting the profit percentage of the shoe sales, given the variables seen in the code below.
+Finally, we will create our recipe that will be predicting the profit percentage of the shoe sales, given the variables seen in the code below. Additionally, we will dummy code all the nominal predictors, as well as centering and scaling them. 
 ```{r}
 sneakers_recipe <- recipe(
   # predict the profit percent using all the predictors except, profit, release_date, order_date.
@@ -491,9 +495,9 @@ sneakers_recipe <- recipe(
   step_normalize(all_predictors())
 ```
 
-### Modeling
+## Modeling
 
-#### Linear Regression Model 
+### Linear Regression Model 
 ```{r, warning=FALSE}
 # Create the model
 lm_model <- linear_reg() %>%
@@ -534,7 +538,7 @@ sneakers_train_res %>%
 ```
 
 
-#### Decision Tree 
+### Decision Tree 
 ```{r, message=FALSE}
 # Create the model
 reg_tree_spec <- decision_tree() %>%
@@ -580,6 +584,27 @@ best_complexity
 
 ### Random Forest 
 ```{r}
+# Create the model 
+rf_spec <- rand_forest() %>%
+  set_engine("ranger", importance = "impurity") %>%
+  set_mode("regression")
+
+# Create the workflow
+rf_wf <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = tune(), trees = tune(), min_n = tune())) %>%
+  add_recipe(sneakers_recipe)
+
+param_grid_rf <- grid_regular(mtry(range = c(1, 7)), trees(range = c(50, 100)), min_n(range = c(1, 5)), levels = 7)
+
+tune_res_rf <- tune_grid(
+  rf_wf, 
+  resamples = sneakers_fold, 
+  grid = param_grid_rf, 
+  metrics = metric_set(rmse),
+  control = control_grid(verbose = TRUE)
+)
+
+autoplot(tune_res_rf)
 
 ```
 
