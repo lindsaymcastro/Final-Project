@@ -34,7 +34,7 @@ other items.
 
 
 Libraries Used for this Project
-```{r,message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE}
 library(readr)
 library(tidyverse)
 library(tidymodels)
@@ -65,7 +65,7 @@ tidymodels_prefer()
 
 Read the data file into R. This file was a csv file. I found this file on the StockX website that challenged its audience in 2019 to enter a data contest using the same 
 data that is used for this project. The link to the original website can be found [here] (https://stockx.com/news/the-2019-data-contest/).
-```{r}
+```{r, class.source = "fold-show"}
 sneakers <- read.csv("Data/StockX-Data.csv")
 ```
 
@@ -74,7 +74,7 @@ sneakers <- read.csv("Data/StockX-Data.csv")
 Next we will do some cleaning. After reading the file in I noticed that there were certain variables that were read in as characters, however they will need to be used as 
 integers therefore we will be converting them to integers before we continue. Likewise the dates that are provided were read in as characters and we will have to switch 
 them to be read as a date format.
-```{r}
+```{r, class.source = "fold-show"}
 # Clean names
 sneakers <- sneakers %>%
   clean_names()
@@ -105,7 +105,7 @@ purpose however we can convert them to weeks relative to each other to be able t
 shoe was ordered to see if it influences the profit percentage in any way. Another very important variable that is missing in this data set is the profit that each shoe 
 makes. This can easily be calculated by finding the difference between the sale price and the retail price of each shoe. Likewise the profit percentage can be calculated as
 well by dividing the profit by the retail price of each shoe. 
-```{r}
+```{r, class.source = "fold-show"}
 # Add the number of weeks between the release date and the order date
 sneakers$weeks <- round(difftime(sneakers$order_date, sneakers$release_date, units = "weeks"))
 
@@ -459,7 +459,7 @@ sneakers %>%
 ## Data Splitting 
 After exploring our data and understanding the correlation that the variables have with each other, it is time to split the data. However before we do that it is important 
 to convert certain variables into factors so that we can later use them in our recipe. 
-```{r}
+```{r, class.source = "fold-show"}
 #Convert variables to factors
 sneakers$brand <- as.factor(sneakers$brand)
 sneakers$sneaker_name <- as.factor(sneakers$sneaker_name)
@@ -480,7 +480,7 @@ overall with the highest accuracy.
 Originally, I had set up my cross validation repeats to equal 5, however, because I was working with a data set with a large amount of observations and many models took a 
 long time to run, I decided that 2 repeats would be more appropriate.
 
-```{r}
+```{r, class.source = "fold-show"}
 set.seed(0714)
 
 # Split the data 
@@ -510,7 +510,7 @@ sneakers_train2 %>%
 
 
 Finally, we will create our recipe that will be predicting the profit percentage of the shoe sales, given the variables seen in the code below. Additionally, we will dummy code all the nominal predictors, as well as centering and scaling them. 
-```{r}
+```{r, class.source = "fold-show"}
 sneakers_recipe <- recipe(
   # predict the profit percent using all the predictors except, profit, release_date, order_date.
   # weeks will account for the dates that are not being included
@@ -538,7 +538,7 @@ The models that will be used for this data set are:
 ### Linear Regression Model 
 Because we are dealing with a regression problem, I began with a simple linear regression model. For this model I will not be using cross validation. 
 First I create the model and the workflow, as well as add the recipe. 
-```{r, warning=FALSE}
+```{r, warning=FALSE, class.source = "fold-show"}
 # Create the model
 lm_model <- linear_reg() %>%
   set_engine("lm")
@@ -549,12 +549,12 @@ lm_wf <- workflow() %>%
   add_recipe(sneakers_recipe)
 ```
 Next I fit the training data to the model.
-```{r}
+```{r, class.source = "fold-show"}
 # Fit model to training set
 lm_fit <- fit(lm_wf, sneakers_train)
 ```
 Afterwards I make a table that will list the prediction values of the model along with the actual values.
-```{r}
+```{r, class.source = "fold-show"}
 # Table w/ predicted and actual values
 sneakers_train_res <- predict(lm_fit, new_data = sneakers_train %>% select(-profit_perc))
 
@@ -564,7 +564,7 @@ In order to understand the performance of this regression model, I outputted the
 The RMSE tells us how well the regression model can predict the value of the response variable in absolute terms. On the other hand, $R^2$ tells us how well a model can 
 predict the value of the response variable in percentage terms, or in this case in the form of a decimal. The MAE tells us how accurate our predictions are and, what the 
 amount of deviation from the actual values is. 
-```{r}
+```{r, class.source = "fold-show"}
 # Metric Set w/ RMSE, MSE, R^2
 sneakers_metrics <- metric_set(rmse, rsq, mae)
 sneakers_metrics(sneakers_train_res, truth = profit_perc, 
@@ -586,7 +586,7 @@ Next we will be fitting the training data into Ridge and Lasso regression models
 
 #### Ridge Regression 
 Similar to linear regression, we will create the model, and workflow. However for these models, we will be tuning them, therefore we will use our folds that we created for cross-validation.
-```{r,message=FALSE, warning=FALSE}
+```{r,message=FALSE, warning=FALSE, class.source = "fold-show"}
 # Create a model
 ridge_spec <- 
   linear_reg(penalty = tune(), mixture = 0) %>%
@@ -599,12 +599,11 @@ ridge_wf <- workflow() %>%
   add_model(ridge_spec)
 ```
 Next, the tuning grid will be set up that will determine the parameters for this model. The parameter tuned in this model will be penalty, while mixture will be set as 0 in order for it to be classified as a ridge regression model. 
-```{r}
+```{r, class.source = "fold-show"}
 penalty_grid_r <- grid_regular(penalty(range = c(-5, 5)), levels = 50)
-penalty_grid_r
 ```
 Finally, the model will be tuned, and cross-validation folds will be fit with the workflow as well. 
-```{r}
+```{r, message=FALSE, warning=FALSE, class.source = "fold-show"}
 tune_res_ridge <- tune_grid(
   ridge_wf, 
   resamples = sneakers_fold, 
@@ -617,13 +616,13 @@ Next, it is helpful to visualize the results, therefore autoplot will be used.
 autoplot(tune_res_ridge)
 ```
 In order to know which model performed the best I will collect the metrics of all the models and choose the best.
-```{r}
+```{r, class.source = "fold-show"}
 collect_metrics(tune_res_ridge)
 
 best_penalty_r <- select_best(tune_res_ridge, metric = "rsq")
 ```
 Finally, I will use the best model to fit the overall training data into. 
-```{r}
+```{r, class.source = "fold-show"}
 ridge_final <- finalize_workflow(ridge_wf, best_penalty_r)
 
 ridge_final_fit <- fit(ridge_final, data = sneakers_train)
@@ -631,14 +630,14 @@ ridge_final_fit <- fit(ridge_final, data = sneakers_train)
 We will evaluate the performance that the model has on the training data. This evaluation will be used later on to compare the performance between all of the models. 
 ```{r}
 augment(ridge_final_fit, new_data = sneakers_train) %>%
-  sneakers_metrics(truth = profit_perc, estimate = .pred_class)
+  sneakers_metrics(truth = profit_perc, estimate = .pred)
 ```
 
 
 
 #### Lasso Regression
 This process will be similar to the same process as Ridge Regression.However in this model mixture will be set to 1, and the same parameter will be tuned, which is penalty. That is what classifies this model as a lasso regression model.
-```{r,message=FALSE, warning=FALSE}
+```{r,message=FALSE, warning=FALSE, class.source = "fold-show"}
 # Create the model
 lasso_spec <- 
   linear_reg(penalty = tune(), mixture = 1) %>%
@@ -677,7 +676,7 @@ lasso_final_fit <- fit(lasso_final, data = sneakers_train)
 
 # Evaluate performance of model on training data
 augment(lasso_final_fit, new_data = sneakers_train) %>%
-  sneakers_metrics(truth = profit_perc, estimate = .pred_class)
+  sneakers_metrics(truth = profit_perc, estimate = .pred)
 
 ```
 
@@ -687,7 +686,7 @@ Next tree-based models are going to be created with the folded data.
 
 #### Decision Tree 
 For this model the parameter that will be tuned is cost_complexity. The same first few steps from the previous models produced are executed for this model too. 
-```{r, message=FALSE}
+```{r, message=FALSE, class.source = "fold-show"}
 # Create the model
 reg_tree_spec <- decision_tree() %>%
   set_engine("rpart") %>%
@@ -708,20 +707,14 @@ tune_res_dt <- tune_grid(
   control = control_grid(verbose = TRUE)
 )
 ```
-Next a visualization of the decision tree will be produced. 
-```{r}
-# Visualization of the tree
-reg_tree_final_fit %>%
-  extract_fit_engine() %>%
-  rpart.plot(roundint = FALSE)
-```
+
 By using the autoplot function, it can be shown how the value of the cost complexity parameter affects the RMSE and $R^2$.
 ```{r}
 # Shows which value of cost complexity produces best rmse and rsq
 autoplot(tune_res_dt)
 ```
 Again like previously seen, the best model will be chosen and fit to the training data and the performance will be evaluated. 
-```{r}
+```{r, class.source = "fold-show"}
 # See performance of all models 
 collect_metrics(tune_res_dt)%>%
   arrange(std_err)
@@ -733,10 +726,19 @@ best_complexity <-select_best(tune_res_dt, metric = "rmse")
 reg_tree_final <- finalize_workflow(reg_tree_wf, best_complexity)
 
 reg_tree_final_fit <- fit(reg_tree_final, data = sneakers_train)
+```
+Next a visualization of the decision tree will be produced. 
+```{r}
+# Visualization of the tree
+reg_tree_final_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
 
+```{r. class.source = "fold-show"}
 # Evaluate performance 
 augment(reg_tree_final_fit, new_data = sneakers_train) %>%
-  sneakers_metrics(truth = profit_perc, estimate = .pred_class)
+  sneakers_metrics(truth = profit_perc, estimate = .pred)
 ```
 
 
@@ -745,7 +747,7 @@ We will repeat the same process for this model as was seen in the decision tree 
 has three parameters that will be tuned: mtry, trees, and min_n. The hyperparameter mtry represents the number of predictors that will be randomly sampled at each split 
 when creating the tree models. The hyperparameter trees represents the number of trees contained in the ensemble. The hyperparameter min_n represents the minimum number of 
 data points in a node that are required for the node to be split further. 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 # Create the model 
 rf_spec <- rand_forest() %>%
   set_engine("ranger", importance = "impurity") %>%
@@ -757,7 +759,7 @@ rf_wf <- workflow() %>%
   add_recipe(sneakers_recipe)
 
 # Create tuning grid 
-param_grid_rf <- grid_regular(mtry(range = c(1, 7)), trees(range = c(50, 100)), min_n(range = c(1, 5)), levels = 7)
+param_grid_rf <- grid_regular(mtry(range = c(1, 7)), trees(range = c(50, 100)), min_n(range = c(1, 5)), levels = 5)
 
 tune_res_rf <- tune_grid(
   rf_wf, 
@@ -786,13 +788,13 @@ rf_final_fit <- fit(rf_final, data = sneakers_train)
 
 # Evaluate performance 
 augment(rf_final_fit, new_data = sneakers_train) %>%
-  sneakers_metrics(truth = profit_perc, estimate = .pred_class)
+  sneakers_metrics(truth = profit_perc, estimate = .pred)
 ```
 
 
 ### Nearest Neighbors 
 The last model was a model that I attempted to fit however I was not the most confident in running it because we did not get much practice with it in this course. For this model the parameter neighbors was set to be tuned. 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 # Create the model 
 knn_model <- nearest_neighbor(
   neighbors = tune(),
@@ -838,16 +840,66 @@ knn_final_fit <- fit(knn_final, data = sneakers_train)
 
 # Evaluate performance
 augment(knn_final_fit, new_data = sneakers_train) %>%
-  sneakers_metrics(truth = profit_perc, estimate = .pred_class)
+  sneakers_metrics(truth = profit_perc, estimate = .pred)
+```
+## Conclusion 
+
+### Model Performance 
+Next we will look at the performance of each model and compare to see which model performed best on the training data. 
+For the linear regression model, it performed with the following metrics: 
+* RMSE: 54.9713892
+* $R^2$: 0.8682691 
+* MAE: 30.2680065 
+
+For the ridge regression model, it performed with the following metrics:: 
+* RMSE: 56.4243079 
+* $R^2$: 0.8626641 
+* MAE: 31.3720788 
+
+For the lasso regression model, it performed with the following metrics:
+* RMSE: 55.207143 
+* $R^2$: 0.867142
+* MAE: 30.440152 
+	
+For the decision tree model, it performed with the following metrics:
+* RMSE: 26.3174108 
+* $R^2$: 0.9698074 
+* MAE: 14.7527728 
+	
+For the random forest mode, it performed with the following metrics:
+* RMSE: 38.1130937
+* $R^2$: 0.9420715
+* MAE: 21.1902408
+
+For the KNN model, it performed with the following metrics: 
+* RMSE: 39.0606262 
+* $R^2$: 0.9350643 
+* MAE: 18.2064622 
+
+Based on the results the models that performed, ordered in best performing to least are: 
+* Decision Tree
+* Random Forest
+* KNN 
+* Linear Regression
+* Lasso regression
+* Ridge Regression
+
+Therefore based on these results, I will proceed to fit my testing data with the decision tree model. 
+
+### Model Fitting 
+I will fit the testing data with the best performing model.
+```{r, class.source = "fold-show"}
+# Fit testing data 
+rf_final_fit_test <- fit(rf_final, data = sneakers_test)
 ```
 
-
-
-
-
-
-
-
+After looking at the matrix, we can see how the model actually performed by outputting the RMSE, $R^2$, and MAE. 
+```{r}
+# Evaluate Performance for Testing Data
+augment(rf_final_fit_test, new_data = sneakers_test) %>%
+  sneakers_metrics(truth = profit_perc, estimate = .pred)
+```
+Based on the outcome, the decision tree model performed with an $R^2$ of 0.93, which means that 93% percent of the data was fitted accurately to the model predictions. Overall, this project has analyzed each of the variables in the data set and used them to predict the profit percentage that the company StockX will make off the sale of a shoe. For this data set, the decision tree model was the machine learning model with the best performance. 
 
 
 
