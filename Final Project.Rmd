@@ -17,12 +17,20 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE,
 
 
 ## Introduction 
-The following project will be analyzing data to be able to predict the profit percentage that the company StockX is proposed to make from the shoes that they resell. The data will be explored analytically to be able to understand the variance within and between variables. Through stratified sampling the data will be split and cross validation will be used as well to be able to fit into various machine learning models. After comparing models, the testing data will be fit to the model that produces the best RMSE and R^2 value. 
+The following project will be analyzing data to be able to predict the profit percentage that the company StockX is proposed to make from the shoes that they resell. The 
+data will be explored analytically to be able to understand the variance within and between variables. Through stratified sampling the data will be split and cross 
+validation will be used as well to be able to fit into various machine learning models. After comparing models, the testing data will be fit to the model that produces the 
+best RMSE and $R^$ value. 
 
 ### What is StockX? 
 StockX is a online marketplace that mainly focuses on reselling sneakers. As a consumer, you are not only able to buy but also sell your own pair of sneakers. 
 
-StockX is a third party platform that primarily buys and sells shoes. For people who are not familiar with the sneaker industry, it can be helpful to think of the StockX business as such: think of a shoe as a stock where different factors affect the price of the shoe at a certain time. For stocks, certain socioeconomic factors such as investor demand influence the price of stocks. If the number of buy orders outnumber the number of sell orders, stock prices rise, and vice versa. The same holds true for shoes, where different factors such as innovation or the name/brand associated with the shoe influence how valuable a shoe is within the shoe market. Organizations such as Yeezy and Offwhite (brands used in this data set) implement basic supply and demand techniques by limiting scale production to increase demand and value for their shoes and other items. 
+StockX is a third party platform that primarily buys and sells shoes. For people who are not familiar with the sneaker industry, it can be helpful to think of the StockX 
+business as such: think of a shoe as a stock where different factors affect the price of the shoe at a certain time. For stocks, certain socioeconomic factors such as 
+investor demand influence the price of stocks. If the number of buy orders outnumber the number of sell orders, stock prices rise, and vice versa. The same holds true for 
+shoes, where different factors such as innovation or the name/brand associated with the shoe influence how valuable a shoe is within the shoe market. Organizations such as 
+Yeezy and Offwhite (brands used in this data set) implement basic supply and demand techniques by limiting scale production to increase demand and value for their shoes and
+other items. 
 
 
 Libraries Used for this Project
@@ -55,14 +63,17 @@ tidymodels_prefer()
 ```
 
 
-Read the data file into R. This file was a csv file. I found this file on the StockX website that challenged its audience in 2019 to enter a data contest using the same data that is used for this project. The link to the original website can be found [here] (https://stockx.com/news/the-2019-data-contest/).
+Read the data file into R. This file was a csv file. I found this file on the StockX website that challenged its audience in 2019 to enter a data contest using the same 
+data that is used for this project. The link to the original website can be found [here] (https://stockx.com/news/the-2019-data-contest/).
 ```{r}
 sneakers <- read.csv("Data/StockX-Data.csv")
 ```
 
 
 ## Cleaning the Data 
-Next we will do some cleaning. After reading the file in I noticed that there were certain variables that were read in as characters, however they will need to be used as integers therefore we will be converting them to integers before we continue. Likewise the dates that are provided were read in as characters and we will have to switch them to be read as a date format.
+Next we will do some cleaning. After reading the file in I noticed that there were certain variables that were read in as characters, however they will need to be used as 
+integers therefore we will be converting them to integers before we continue. Likewise the dates that are provided were read in as characters and we will have to switch 
+them to be read as a date format.
 ```{r}
 # Clean names
 sneakers <- sneakers %>%
@@ -89,7 +100,11 @@ sum(is.na(sneakers))
 There are no missing values within the data set, therefore we will continue to use the entire data set. 
 
 ### Adding additional information for further analysis 
-There are a couple new variables that can be added to this data set that can further enhance the analysis. As of right now, the variables containing dates serve us no purpose however we can convert them to weeks relative to each other to be able to incorporate them into our analysis. Similarly, we can use the days of the week that each shoe was ordered to see if it influences the profit percentage in any way. Another very important variable that is missing in this data set is the profit that each shoe makes. This can easily be calculated by finding the difference between the sale price and the retail price of each shoe. Likewise the profit percentage can be calculated as well by dividing the profit by the retail price of each shoe. 
+There are a couple new variables that can be added to this data set that can further enhance the analysis. As of right now, the variables containing dates serve us no 
+purpose however we can convert them to weeks relative to each other to be able to incorporate them into our analysis. Similarly, we can use the days of the week that each 
+shoe was ordered to see if it influences the profit percentage in any way. Another very important variable that is missing in this data set is the profit that each shoe 
+makes. This can easily be calculated by finding the difference between the sale price and the retail price of each shoe. Likewise the profit percentage can be calculated as
+well by dividing the profit by the retail price of each shoe. 
 ```{r}
 # Add the number of weeks between the release date and the order date
 sneakers$weeks <- round(difftime(sneakers$order_date, sneakers$release_date, units = "weeks"))
@@ -106,7 +121,8 @@ sneakers$profit_perc <- round((sneakers$profit / sneakers$retail_price) * 100)
 
 
 ## Exploratory Data Analysis (EDA) 
-The entire exploratory data analysis will be done on the entire data set. The data set overall has 99,956 observations, with originally 8 variables, however after adding new variables to the data set it actually has 12 variables. Each observation represents the sale of a single shoe. 
+The entire exploratory data analysis will be done on the entire data set. The data set overall has 99,956 observations, with originally 8 variables, however after adding  
+new variables to the data set it actually has 12 variables. Each observation represents the sale of a single shoe. 
 
 
 Shoe Size 
@@ -209,7 +225,8 @@ For the Yeezy brand there are 20 individual sneaker types, where the sneakers wi
 In total there are 50 different kinds of sneakers across 2 different brands, 30 for Off-White, and 20 for Yeezy. 
 
 
-Next we will look at sales for both the Off-White brand and the Yeezy brand, and compare them to the average retail price, average sale price, and max sale price for each shoe and their kind.
+Next we will look at sales for both the Off-White brand and the Yeezy brand, and compare them to the average retail price, average sale price, and max sale price for each 
+shoe and their kind.
 ```{r}
 # Find average sale and retail price and max sale price for each sneaker, arranged by highest average sale price to lowest
 offwhite %>%
@@ -324,7 +341,8 @@ sneakers %>%
   coord_flip()
 ```
 
-To further examine the influence of the buyer region we look at the average sale price for a the shoes sold in each state. However, the average sale price also has to do with the types of shoes sold in each state too. 
+To further examine the influence of the buyer region we look at the average sale price for a the shoes sold in each state. However, the average sale price also has to do  
+with the types of shoes sold in each state too. 
 ```{r}
 sneakers %>%
   group_by(buyer_region) %>%
@@ -363,7 +381,8 @@ sneakers %>%
   labs(title = "Total Number of Sales Per Shoe Size", x = "Shoe Size", y = "Number of Sales")
 ```
 
-The following graph shows the shoe size with the profit percent that was made on each sale. The scatterplot is utilized to be able to identify shoes that are outliers that contribute to a higher percent profit. 
+The following graph shows the shoe size with the profit percent that was made on each sale. The scatterplot is utilized to be able to identify shoes that are outliers that 
+contribute to a higher percent profit. 
 ```{r}
 sneakers %>%
   select(shoe_size, profit_perc) %>%
@@ -401,7 +420,7 @@ sneakers %>%
   labs(title = "Weeks when Shoes Sold for Most Profit", x = "Weeks", y = "Percent of Profit")
 ```
 
-Another graph that was made was the following to see what weeks made the most sales in comparison to their release dates. Here it is clear that m,any sales were made close to the release date. 
+Another graph that was made was the following to see what weeks made the most sales in comparison to their release dates. Here it is clear that many sales were made close to the release date. 
 ```{r}
 sneakers %>%
   group_by(weeks) %>%
@@ -438,7 +457,8 @@ sneakers %>%
 
 
 ## Data Splitting 
-After exploring our data and understanding the correlation that the variables have with each other, it is time to split the data. However before we do that it is important to convert certain variables into factors so that we can later use them in our recipe. 
+After exploring our data and understanding the correlation that the variables have with each other, it is time to split the data. However before we do that it is important 
+to convert certain variables into factors so that we can later use them in our recipe. 
 ```{r}
 #Convert variables to factors
 sneakers$brand <- as.factor(sneakers$brand)
@@ -449,12 +469,16 @@ sneakers$weeks <- as.numeric(sneakers$weeks)
 ```
 
 
-Next we split the data and stratify it. When we stratify the data we make sure the data is being split evenly and between training and testing data sets. This makes sure that each set contains the same proportions of the response variable to reflect the entire data set overall. This helps the process of modeling because it allows the models to work with a smaller version of the overall data in order to acheive higher accuracy in predictions
+Next we split the data and stratify it. When we stratify the data we make sure the data is being split evenly and between training and testing data sets. This makes sure 
+that each set contains the same proportions of the response variable to reflect the entire data set overall. This helps the process of modeling because it allows the models to work with a smaller version of the overall data in order to acheive higher accuracy in predictions
 
 ### Cross Validation 
-Afterwards the split data will be assigned as training or testing. And before creating the recipe, I will fold my training data into 10 folds, with 2 repeats in order to be able to perform cross validation. Stratified cross validation will enhance the modeling process because it will further break down the training data set into smaller data sets that will be ran to create mini models, and essentially the best model will be used on the overall training data, and this too will help in determining the best model overall with the highest accuracy.
+Afterwards the split data will be assigned as training or testing. And before creating the recipe, I will fold my training data into 10 folds, with 2 repeats in order to be able to perform cross validation. Stratified cross validation will enhance the modeling process because it will further break down the training data set into smaller data 
+sets that will be ran to create mini models, and essentially the best model will be used on the overall training data, and this too will help in determining the best model 
+overall with the highest accuracy.
 
-Originally, I had set up my cross validation repeats to equal 5, however, because I was working with a data set with a large amount of observations and many models took a long time to run, I decided that 2 repeats would be more appropriate.
+Originally, I had set up my cross validation repeats to equal 5, however, because I was working with a data set with a large amount of observations and many models took a 
+long time to run, I decided that 2 repeats would be more appropriate.
 
 ```{r}
 set.seed(0714)
@@ -472,7 +496,10 @@ sneakers_fold <- vfold_cv(sneakers_train, strata = profit_perc, v = 10, repeats 
 
 
 ### Correlation Plot 
-Before creating our recipe, a correlation plot will be made in order to examine which variables are positively or negatively correlated with each other. This will provide a vague idea of which variables to use in our recipe to predict our response variable. For this data set I have decided to make the profit percentage the response variable, therefore I will note any variables that have high correlation to the profit percentage. As seen in the plot, sale price and, of course, profit are extremely correlated to the profit percentage, therefore they will not be included in the recipe in order to avoid multicollinearity. 
+Before creating our recipe, a correlation plot will be made in order to examine which variables are positively or negatively correlated with each other. This will provide a
+ vague idea of which variables to use in our recipe to predict our response variable. For this data set I have decided to make the profit percentage the response variable,
+ therefore I will note any variables that have high correlation to the profit percentage. As seen in the plot, sale price and, of course, profit are extremely correlated to
+ the profit percentage, therefore they will not be included in the recipe in order to avoid multicollinearity. 
 ```{r}
 sneakers_train2 <- sneakers_train[,sapply(sneakers_train, is.numeric)]
 sneakers_train2 %>%
@@ -495,10 +522,22 @@ sneakers_recipe <- recipe(
   step_normalize(all_predictors())
 ```
 
-## Modeling 
+## Model Building 
+Now that we have our recipe made we can begin the modeling process. Because the response variable is a continuous quantitative variable, I will be making regression models.
+The models that will be used for this data set are: 
+* Linear Regression Model 
+* Regularization Regression 
+  + Lasso Regression 
+  + Ridge Regression 
+* Tree-Based Models 
+  + Decision Tree 
+  + Random Forest 
+* KNN (Nearest Neighbors)
 
 
 ### Linear Regression Model 
+Because we are dealing with a regression problem, I began with a simple linear regression model. For this model I will not be using cross validation. 
+First I create the model and the workflow, as well as add the recipe. 
 ```{r, warning=FALSE}
 # Create the model
 lm_model <- linear_reg() %>%
@@ -508,27 +547,31 @@ lm_model <- linear_reg() %>%
 lm_wf <- workflow() %>%
   add_model(lm_model) %>%
   add_recipe(sneakers_recipe)
-
+```
+Next I fit the training data to the model.
+```{r}
 # Fit model to training set
 lm_fit <- fit(lm_wf, sneakers_train)
-
-# View the results (don't really need)
-lm_fit %>%
-  extract_fit_parsnip() %>%
-  tidy()
-
+```
+Afterwards I make a table that will list the prediction values of the model along with the actual values.
+```{r}
 # Table w/ predicted and actual values
 sneakers_train_res <- predict(lm_fit, new_data = sneakers_train %>% select(-profit_perc))
 
 sneakers_train_res <- bind_cols(sneakers_train_res, sneakers_train %>% select(profit_perc))
-sneakers_train_res %>%
-  head()
-
+```
+In order to understand the performance of this regression model, I outputted the RMSE, $R^2$, and the MAE using the following code.
+The RMSE tells us how well the regression model can predict the value of the response variable in absolute terms. On the other hand, $R^2$ tells us how well a model can 
+predict the value of the response variable in percentage terms, or in this case in the form of a decimal. The MAE tells us how accurate our predictions are and, what the 
+amount of deviation from the actual values is. 
+```{r}
 # Metric Set w/ RMSE, MSE, R^2
 sneakers_metrics <- metric_set(rmse, rsq, mae)
 sneakers_metrics(sneakers_train_res, truth = profit_perc, 
                  estimate = .pred)
-
+```
+Finally, in order to visually see how the model performed, I graphed the predictions versus the actual responses. For this model, it seems like the model somewhat follows the direction of the line, however there are certain predictions that are either overestimated or underestimated.
+```{r}
 # Plot for Predicted vs Actual Values
 sneakers_train_res %>%
   ggplot(aes(x = .pred, y = profit_perc)) +
@@ -538,82 +581,11 @@ sneakers_train_res %>%
   coord_obs_pred()
 ```
 
+### Regularization Regression 
+Next we will be fitting the training data into Ridge and Lasso regression models. 
 
-### Decision Tree 
-```{r, message=FALSE}
-# Create the model
-reg_tree_spec <- decision_tree() %>%
-  set_engine("rpart") %>%
-  set_mode("regression")
-
-# Create the workflow
-reg_tree_wf <- workflow() %>%
-  add_model(reg_tree_spec %>% set_args(cost_complexity = tune())) %>%
-  add_recipe(sneakers_recipe)
-
-param_grid_dt <- grid_regular(cost_complexity(range = c(-4, -1)), levels = 10)
-
-tune_res_dt <- tune_grid(
-  reg_tree_wf, 
-  resamples = sneakers_fold, 
-  grid = param_grid_dt,
-  control = control_grid(verbose = TRUE)
-)
-
-autoplot(tune_res_dt)
-
-
-```
-
-```{r}
-best_complexity <-select_best(tune_res_dt, metric = "rmse")
-
-reg_tree_final <- finalize_workflow(reg_tree_wf, best_complexity)
-
-reg_tree_final_fit <- fit(reg_tree_final, data = sneakers_train)
-
-reg_tree_final_fit %>%
-  extract_fit_engine() %>%
-  rpart.plot(roundint = FALSE)
-
-collect_metrics(tune_res_dt)%>%
-  arrange(std_err)
-
-best_complexity
-```
-
-
-### Random Forest 
-```{r}
-# Create the model 
-rf_spec <- rand_forest() %>%
-  set_engine("ranger", importance = "impurity") %>%
-  set_mode("regression")
-
-# Create the workflow
-rf_wf <- workflow() %>%
-  add_model(rf_spec %>% set_args(mtry = tune(), trees = tune(), min_n = tune())) %>%
-  add_recipe(sneakers_recipe)
-
-param_grid_rf <- grid_regular(mtry(range = c(1, 7)), trees(range = c(50, 100)), min_n(range = c(1, 5)), levels = 7)
-
-tune_res_rf <- tune_grid(
-  rf_wf, 
-  resamples = sneakers_fold, 
-  grid = param_grid_rf, 
-  metrics = metric_set(rmse),
-  control = control_grid(verbose = TRUE)
-)
-
-autoplot(tune_res_rf)
-
-```
-
-
-
-
-
-### Ridge Regression 
+#### Ridge Regression 
+Similar to linear regression, we will create the model, and workflow. However for these models, we will be tuning them, therefore we will use our folds that we created for cross-validation.
 ```{r,message=FALSE, warning=FALSE}
 # Create a model
 ridge_spec <- 
@@ -625,37 +597,47 @@ ridge_spec <-
 ridge_wf <- workflow() %>%
   add_recipe(sneakers_recipe) %>%
   add_model(ridge_spec)
-
+```
+Next, the tuning grid will be set up that will determine the parameters for this model. The parameter tuned in this model will be penalty, while mixture will be set as 0 in order for it to be classified as a ridge regression model. 
+```{r}
 penalty_grid_r <- grid_regular(penalty(range = c(-5, 5)), levels = 50)
 penalty_grid_r
-
+```
+Finally, the model will be tuned, and cross-validation folds will be fit with the workflow as well. 
+```{r}
 tune_res_ridge <- tune_grid(
   ridge_wf, 
   resamples = sneakers_fold, 
   grid = penalty_grid_r,
   control = control_grid(verbose = TRUE)
 )
-
-autoplot(tune_res_ridge)
-
 ```
-
+Next, it is helpful to visualize the results, therefore autoplot will be used.
+```{r}
+autoplot(tune_res_ridge)
+```
+In order to know which model performed the best I will collect the metrics of all the models and choose the best.
 ```{r}
 collect_metrics(tune_res_ridge)
 
 best_penalty_r <- select_best(tune_res_ridge, metric = "rsq")
-best_penalty_r
-
+```
+Finally, I will use the best model to fit the overall training data into. 
+```{r}
 ridge_final <- finalize_workflow(ridge_wf, best_penalty_r)
 
 ridge_final_fit <- fit(ridge_final, data = sneakers_train)
-
+```
+We will evaluate the performance that the model has on the training data. This evaluation will be used later on to compare the performance between all of the models. 
+```{r}
+augment(ridge_final_fit, new_data = sneakers_train) %>%
+  sneakers_metrics(truth = profit_perc, estimate = .pred_class)
 ```
 
 
 
-
-### Lasso Regression
+#### Lasso Regression
+This process will be similar to the same process as Ridge Regression.However in this model mixture will be set to 1, and the same parameter will be tuned, which is penalty. That is what classifies this model as a lasso regression model.
 ```{r,message=FALSE, warning=FALSE}
 # Create the model
 lasso_spec <- 
@@ -668,6 +650,7 @@ lasso_wf <- workflow() %>%
   add_recipe(sneakers_recipe) %>%
   add_model(lasso_spec)
 
+# Create the tuning grid
 penalty_grid_l <- grid_regular(penalty(range = c(-2, 2)), levels = 50)
 
 tune_res_lasso <- tune_grid(
@@ -677,23 +660,138 @@ tune_res_lasso <- tune_grid(
   control = control_grid(verbose = TRUE)
 )
 
+# Visualize results
 autoplot(tune_res_lasso)
-```
 
-```{r}
+
+# See performance of all models 
 collect_metrics(tune_res_lasso)
 
+# Choose best model
 best_penalty_l <- select_best(tune_res_lasso, metric = "rsq")
-best_penalty_l
 
+# Fit best model to training data 
 lasso_final <- finalize_workflow(lasso_wf, best_penalty_l)
 
 lasso_final_fit <- fit(lasso_final, data = sneakers_train)
 
+# Evaluate performance of model on training data
+augment(lasso_final_fit, new_data = sneakers_train) %>%
+  sneakers_metrics(truth = profit_perc, estimate = .pred_class)
+
+```
+
+
+### Tree-Based Models
+Next tree-based models are going to be created with the folded data. 
+
+#### Decision Tree 
+For this model the parameter that will be tuned is cost_complexity. The same first few steps from the previous models produced are executed for this model too. 
+```{r, message=FALSE}
+# Create the model
+reg_tree_spec <- decision_tree() %>%
+  set_engine("rpart") %>%
+  set_mode("regression")
+
+# Create the workflow
+reg_tree_wf <- workflow() %>%
+  add_model(reg_tree_spec %>% set_args(cost_complexity = tune())) %>%
+  add_recipe(sneakers_recipe)
+
+# Create tuning grid
+param_grid_dt <- grid_regular(cost_complexity(range = c(-4, -1)), levels = 10)
+
+tune_res_dt <- tune_grid(
+  reg_tree_wf, 
+  resamples = sneakers_fold, 
+  grid = param_grid_dt,
+  control = control_grid(verbose = TRUE)
+)
+```
+Next a visualization of the decision tree will be produced. 
+```{r}
+# Visualization of the tree
+reg_tree_final_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+By using the autoplot function, it can be shown how the value of the cost complexity parameter affects the RMSE and $R^2$.
+```{r}
+# Shows which value of cost complexity produces best rmse and rsq
+autoplot(tune_res_dt)
+```
+Again like previously seen, the best model will be chosen and fit to the training data and the performance will be evaluated. 
+```{r}
+# See performance of all models 
+collect_metrics(tune_res_dt)%>%
+  arrange(std_err)
+
+# Choose best model 
+best_complexity <-select_best(tune_res_dt, metric = "rmse")
+
+# Fit best model to training data
+reg_tree_final <- finalize_workflow(reg_tree_wf, best_complexity)
+
+reg_tree_final_fit <- fit(reg_tree_final, data = sneakers_train)
+
+# Evaluate performance 
+augment(reg_tree_final_fit, new_data = sneakers_train) %>%
+  sneakers_metrics(truth = profit_perc, estimate = .pred_class)
+```
+
+
+### Random Forest 
+We will repeat the same process for this model as was seen in the decision tree model. The difference between the random forest model and decision trees is that this model 
+has three parameters that will be tuned: mtry, trees, and min_n. The hyperparameter mtry represents the number of predictors that will be randomly sampled at each split 
+when creating the tree models. The hyperparameter trees represents the number of trees contained in the ensemble. The hyperparameter min_n represents the minimum number of 
+data points in a node that are required for the node to be split further. 
+```{r}
+# Create the model 
+rf_spec <- rand_forest() %>%
+  set_engine("ranger", importance = "impurity") %>%
+  set_mode("regression")
+
+# Create the workflow
+rf_wf <- workflow() %>%
+  add_model(rf_spec %>% set_args(mtry = tune(), trees = tune(), min_n = tune())) %>%
+  add_recipe(sneakers_recipe)
+
+# Create tuning grid 
+param_grid_rf <- grid_regular(mtry(range = c(1, 7)), trees(range = c(50, 100)), min_n(range = c(1, 5)), levels = 7)
+
+tune_res_rf <- tune_grid(
+  rf_wf, 
+  resamples = sneakers_fold, 
+  grid = param_grid_rf, 
+  metrics = metric_set(rmse),
+  control = control_grid(verbose = TRUE)
+)
+```
+The visualization of this model shows how the number of trees perform for each min_n and how it affects the RMSE.
+```{r}
+autoplot(tune_res_rf)
+```
+Again like previously seen, the best model will be chosen and fit to the training data and the performance will be evaluated. 
+```{r}
+# See performance of all models 
+collect_metrics(tune_res_rf)
+
+# Choose best model 
+best_forest <-select_best(tune_res_rf, metric = "rmse")
+
+# Fit best model to training data
+rf_final <- finalize_workflow(rf_wf, best_forest)
+
+rf_final_fit <- fit(rf_final, data = sneakers_train)
+
+# Evaluate performance 
+augment(rf_final_fit, new_data = sneakers_train) %>%
+  sneakers_metrics(truth = profit_perc, estimate = .pred_class)
 ```
 
 
 ### Nearest Neighbors 
+The last model was a model that I attempted to fit however I was not the most confident in running it because we did not get much practice with it in this course. For this model the parameter neighbors was set to be tuned. 
 ```{r}
 # Create the model 
 knn_model <- nearest_neighbor(
@@ -719,22 +817,28 @@ knn_tune <- knn_wf %>%
     grid = knn_grid,
     control = control_grid(verbose = TRUE)
 )
-
-autoplot(knn_tune, metric = "rmse")
-
-
-
-
 ```
-
+The autoplot function was used to show how the number of neighbors affect the RMSE.
 ```{r}
+#Visualization of the # of neighbors
+autoplot(knn_tune, metric = "rmse")
+```
+Next we choose the best model, fit our training data, and evaluate the performance of the model on the training data set. 
+```{r}
+# See performance of all models 
 collect_metrics(knn_tune)
 
+# Choose best model
 best_knn <- select_best(knn_tune, metric = "rsq")
 
+# Fit best to training data 
 knn_final <- finalize_workflow(knn_wf, best_knn)
 
 knn_final_fit <- fit(knn_final, data = sneakers_train)
+
+# Evaluate performance
+augment(knn_final_fit, new_data = sneakers_train) %>%
+  sneakers_metrics(truth = profit_perc, estimate = .pred_class)
 ```
 
 
