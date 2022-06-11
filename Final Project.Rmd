@@ -495,7 +495,8 @@ sneakers_recipe <- recipe(
   step_normalize(all_predictors())
 ```
 
-## Modeling
+## Modeling 
+
 
 ### Linear Regression Model 
 ```{r, warning=FALSE}
@@ -735,7 +736,6 @@ knn_final <- finalize_workflow(knn_wf, best_knn)
 
 knn_final_fit <- fit(knn_final, data = sneakers_train)
 ```
-
 
 
 
