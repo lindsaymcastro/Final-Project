@@ -1,0 +1,25 @@
+Variables in Sneakers Data Set
+
+brand: The brand of the shoe, there are only two brands in this data set: Yeezy and Off-White
+
+sneaker_name: The specific name and type of the sneaker, given the brand's name. There are 50 different sneaker types in this data set, where 20 are Yeezy, and 30 are Off-White.
+
+order_date: The date of when the shoe was ordered/sold.
+
+release_date: The date of when the shoe was released, or in other words, when the shoe came out to the market. 
+
+sale_price: The price that StockX sold at the shoe.
+
+retail_price: The price that the shoe is originally sold at when first released.
+
+buyer_region: the region where the shoe was sold/purchased. There are 51 regions, where 50 of them are the states, and 1 is the capital, the District of Columbia.
+
+shoe_size: The size of the shoe
+
+weeks: the number of weeks after/before the release date of when the shoe was sold 
+
+profit: the profit that the shoe made, essentially this is the difference between the sale price and the retail price.
+
+profit_perc: the percentage of profit made by the shoe sale
+
+day_of_week: the day of the week on which the shoe was sold.  
