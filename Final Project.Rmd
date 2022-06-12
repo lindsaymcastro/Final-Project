@@ -20,7 +20,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE,
 The following project will be analyzing data to be able to predict the profit percentage that the company StockX is proposed to make from the shoes that they resell. The 
 data will be explored analytically to be able to understand the variance within and between variables. Through stratified sampling the data will be split and cross 
 validation will be used as well to be able to fit into various machine learning models. After comparing models, the testing data will be fit to the model that produces the 
-best RMSE and $R^$ value. 
+best RMSE and $R^2$ value. 
 
 ### What is StockX? 
 StockX is a online marketplace that mainly focuses on reselling sneakers. As a consumer, you are not only able to buy but also sell your own pair of sneakers. 
@@ -64,7 +64,7 @@ tidymodels_prefer()
 
 
 Read the data file into R. This file was a csv file. I found this file on the StockX website that challenged its audience in 2019 to enter a data contest using the same 
-data that is used for this project. The link to the original website can be found [here] (https://stockx.com/news/the-2019-data-contest/).
+data that is used for this project. The link to the original website can be found [here](https://stockx.com/news/the-2019-data-contest/).
 ```{r, class.source = "fold-show"}
 sneakers <- read.csv("Data/StockX-Data.csv")
 ```
@@ -99,7 +99,7 @@ sum(is.na(sneakers))
 
 There are no missing values within the data set, therefore we will continue to use the entire data set. 
 
-### Adding additional information for further analysis 
+### Adding additional information  
 There are a couple new variables that can be added to this data set that can further enhance the analysis. As of right now, the variables containing dates serve us no 
 purpose however we can convert them to weeks relative to each other to be able to incorporate them into our analysis. Similarly, we can use the days of the week that each 
 shoe was ordered to see if it influences the profit percentage in any way. Another very important variable that is missing in this data set is the profit that each shoe 
@@ -134,7 +134,9 @@ sneakers %>%
 ```
 There are 26 different shoe sizes in the dataset. The top three sizes across the entire data set are:
 * 10 (11093) 
+
 * 9 (9706) 
+
 * 11 (9251) 
 
 
@@ -167,7 +169,9 @@ offwhite %>%
 ```
 This Off-White dataset is missing the size 13.0 and 14.5, therefore there are only 24 sizes as opposed to 26. The top three sizes with the most shoes for Off-White are: 
 * 10 (3654) 
+
 * 11 (3109) 
+
 * 9 (2703) 
 
 
@@ -190,7 +194,9 @@ yeezy %>%
 ```
 This Yeezy dataset is missing the size 15, therefore there are only 25 sizes as opposed to 26. The top three sizes with the most shoes for Yeezy are: 
 * 10 (7439) 
+
 * 9 (7003) 
+
 * 9.5 (6430) 
 
 
@@ -205,8 +211,11 @@ offwhite %>%
 
 For the Off-White brand there are 30 individual sneaker types, where the sneakers with the most sales are: 
 * Air-Jordan-1-Retro-High-Off-White-University-Blue (4635) 
+
 * Nike-Air-Presto-Off-White-Back-2018 (1884) 
+
 * Nike-Air-Presto-Off-White-White-2018 (1883) 
+
 
 ```{r}
 #Find the number of sneakers listed for Yeezy and the quantities of each.
@@ -218,8 +227,11 @@ yeezy %>%
 
 For the Yeezy brand there are 20 individual sneaker types, where the sneakers with the most sales are: 
 * Adidas-Yeezy-Boost-350-V2-Butter (11423) 
+
 * Adidas-Yeezy-Boost-350-V2-Beluga-2pt0 (10395) 
+
 * Adidas-Yeezy-Boost-350-V2-Zebra (10110) 
+
 
 
 In total there are 50 different kinds of sneakers across 2 different brands, 30 for Off-White, and 20 for Yeezy. 
@@ -237,16 +249,22 @@ offwhite %>%
 ```
 Based on our output we conclude the follwoing:  
 
-The most expensive sales for Off-White shoes are:
+The most expensive sales for Off-White shoes are: 
 * Air-Jordan-1-Retro-High-Off-White-Chicago (4050) 
+
 * Air-Jordan-1-Retro-High-Off-White-University-Blue (3680) 
+
 * Air-Jordan-1-Retro-High-Off-White-White (2950) 
 
 
-The most expensive Off-White shoes on average for sales price are:
+
+The most expensive Off-White shoes on average for sales price are: 
 * Air-Jordan-1-Retro-High-Off-White-White (1826.07) 
-* Air-Jordan-1-Retro-High-Off-White-Chicago (1769)
+
+* Air-Jordan-1-Retro-High-Off-White-Chicago (1769) 
+
 * Nike-Air-Presto-Off-White (1236.05) 
+
 
 
 ```{r}
@@ -260,13 +278,18 @@ yeezy %>%
 
 The most expenisive sales for Yeezy shoes are: 
 * Adidas-Yeezy-Boost-350-Low-Turtledove (2300) 
+
 * Adidas-Yeezy-Boost-350-Low-Moonrock (2000) 
+
 * Adidas-Yeezy-Boost-350-V2-Blue-Tint (2000) 
 
-The most expensive Yeezy shoes on average for sales price are:
+The most expensive Yeezy shoes on average for sales price are: 
 * Adidas-Yeezy-Boost-350-Low-Turtledove (1531.66) 
+
 * Adidas-Yeezy-Boost-350-Low-Oxford-Tan (1011.51) 
+
 * Adidas-Yeezy-Boost-350-Low-Moonrock (996.71) 
+
 
 
 Next we will find out how many buyer regions there are and what are they:
@@ -279,8 +302,11 @@ sneakers %>%
 
 There are a total of 51 regions where the shoes in the data set was sold, where the top regions with the most sales are: 
 * California (19349) 
+
 * New York (16525) 
+
 * Oregon (7681) 
+
 
 
 The regions for the most part are states, however District of Colombia is considered a region in this data set, which is not a state but rather the capital of the U.S.
@@ -526,13 +552,17 @@ sneakers_recipe <- recipe(
 Now that we have our recipe made we can begin the modeling process. Because the response variable is a continuous quantitative variable, I will be making regression models.
 The models that will be used for this data set are: 
 * Linear Regression Model 
+
 * Regularization Regression 
-  + Lasso Regression 
-  + Ridge Regression 
+    + Lasso Regression 
+    + Ridge Regression 
+  
 * Tree-Based Models 
-  + Decision Tree 
-  + Random Forest 
-* KNN (Nearest Neighbors)
+    + Decision Tree 
+    + Random Forest 
+  
+* KNN (Nearest Neighbors) 
+
 
 
 ### Linear Regression Model 
@@ -717,7 +747,8 @@ Again like previously seen, the best model will be chosen and fit to the trainin
 ```{r, class.source = "fold-show"}
 # See performance of all models 
 collect_metrics(tune_res_dt)%>%
-  arrange(std_err)
+  arrange(std_err) %>% 
+  head() 
 
 # Choose best model 
 best_complexity <-select_best(tune_res_dt, metric = "rmse")
@@ -735,7 +766,7 @@ reg_tree_final_fit %>%
   rpart.plot(roundint = FALSE)
 ```
 
-```{r. class.source = "fold-show"}
+```{r, class.source = "fold-show"}
 # Evaluate performance 
 augment(reg_tree_final_fit, new_data = sneakers_train) %>%
   sneakers_metrics(truth = profit_perc, estimate = .pred)
@@ -776,7 +807,8 @@ autoplot(tune_res_rf)
 Again like previously seen, the best model will be chosen and fit to the training data and the performance will be evaluated. 
 ```{r}
 # See performance of all models 
-collect_metrics(tune_res_rf)
+collect_metrics(tune_res_rf) %>% 
+  head()
 
 # Choose best model 
 best_forest <-select_best(tune_res_rf, metric = "rmse")
@@ -792,7 +824,7 @@ augment(rf_final_fit, new_data = sneakers_train) %>%
 ```
 
 
-### Nearest Neighbors 
+### KNN (Nearest Neighbors) 
 The last model was a model that I attempted to fit however I was not the most confident in running it because we did not get much practice with it in this course. For this model the parameter neighbors was set to be tuned. 
 ```{r, message=FALSE, warning=FALSE}
 # Create the model 
@@ -847,42 +879,66 @@ augment(knn_final_fit, new_data = sneakers_train) %>%
 ### Model Performance 
 Next we will look at the performance of each model and compare to see which model performed best on the training data. 
 For the linear regression model, it performed with the following metrics: 
-* RMSE: 54.9713892
+* RMSE: 54.9713892 
+
 * $R^2$: 0.8682691 
+
 * MAE: 30.2680065 
 
-For the ridge regression model, it performed with the following metrics:: 
+
+For the ridge regression model, it performed with the following metrics: 
 * RMSE: 56.4243079 
+
 * $R^2$: 0.8626641 
+
 * MAE: 31.3720788 
 
-For the lasso regression model, it performed with the following metrics:
+
+For the lasso regression model, it performed with the following metrics: 
 * RMSE: 55.207143 
-* $R^2$: 0.867142
+
+* $R^2$: 0.867142 
+
 * MAE: 30.440152 
+
 	
-For the decision tree model, it performed with the following metrics:
+For the decision tree model, it performed with the following metrics: 
 * RMSE: 26.3174108 
+
 * $R^2$: 0.9698074 
+
 * MAE: 14.7527728 
+
 	
-For the random forest mode, it performed with the following metrics:
-* RMSE: 38.1130937
-* $R^2$: 0.9420715
-* MAE: 21.1902408
+For the random forest mode, it performed with the following metrics: 
+* RMSE: 38.1130937 
+
+* $R^2$: 0.9420715 
+
+* MAE: 21.1902408 
+
 
 For the KNN model, it performed with the following metrics: 
 * RMSE: 39.0606262 
+
 * $R^2$: 0.9350643 
+
 * MAE: 18.2064622 
 
+
 Based on the results the models that performed, ordered in best performing to least are: 
-* Decision Tree
-* Random Forest
+* Decision Tree 
+
+* Random Forest 
+
 * KNN 
-* Linear Regression
-* Lasso regression
-* Ridge Regression
+
+* Linear Regression 
+
+* Lasso regression 
+
+* Ridge Regression 
+
 
 Therefore based on these results, I will proceed to fit my testing data with the decision tree model. 
 
