@@ -133,6 +133,7 @@ sneakers %>%
   head()
 ```
 There are 26 different shoe sizes in the dataset. The top three sizes across the entire data set are:
+
 * 10 (11093) 
 
 * 9 (9706) 
@@ -168,6 +169,7 @@ offwhite %>%
 
 ```
 This Off-White dataset is missing the size 13.0 and 14.5, therefore there are only 24 sizes as opposed to 26. The top three sizes with the most shoes for Off-White are: 
+
 * 10 (3654) 
 
 * 11 (3109) 
@@ -193,6 +195,7 @@ yeezy %>%
   head()
 ```
 This Yeezy dataset is missing the size 15, therefore there are only 25 sizes as opposed to 26. The top three sizes with the most shoes for Yeezy are: 
+
 * 10 (7439) 
 
 * 9 (7003) 
@@ -210,6 +213,7 @@ offwhite %>%
 ```
 
 For the Off-White brand there are 30 individual sneaker types, where the sneakers with the most sales are: 
+
 * Air-Jordan-1-Retro-High-Off-White-University-Blue (4635) 
 
 * Nike-Air-Presto-Off-White-Back-2018 (1884) 
@@ -225,7 +229,8 @@ yeezy %>%
   head()
 ```
 
-For the Yeezy brand there are 20 individual sneaker types, where the sneakers with the most sales are: 
+For the Yeezy brand there are 20 individual sneaker types, where the sneakers with the most sales are:
+
 * Adidas-Yeezy-Boost-350-V2-Butter (11423) 
 
 * Adidas-Yeezy-Boost-350-V2-Beluga-2pt0 (10395) 
@@ -250,6 +255,7 @@ offwhite %>%
 Based on our output we conclude the follwoing:  
 
 The most expensive sales for Off-White shoes are: 
+
 * Air-Jordan-1-Retro-High-Off-White-Chicago (4050) 
 
 * Air-Jordan-1-Retro-High-Off-White-University-Blue (3680) 
@@ -259,6 +265,7 @@ The most expensive sales for Off-White shoes are:
 
 
 The most expensive Off-White shoes on average for sales price are: 
+
 * Air-Jordan-1-Retro-High-Off-White-White (1826.07) 
 
 * Air-Jordan-1-Retro-High-Off-White-Chicago (1769) 
@@ -277,6 +284,7 @@ yeezy %>%
 ```
 
 The most expenisive sales for Yeezy shoes are: 
+
 * Adidas-Yeezy-Boost-350-Low-Turtledove (2300) 
 
 * Adidas-Yeezy-Boost-350-Low-Moonrock (2000) 
@@ -284,6 +292,7 @@ The most expenisive sales for Yeezy shoes are:
 * Adidas-Yeezy-Boost-350-V2-Blue-Tint (2000) 
 
 The most expensive Yeezy shoes on average for sales price are: 
+
 * Adidas-Yeezy-Boost-350-Low-Turtledove (1531.66) 
 
 * Adidas-Yeezy-Boost-350-Low-Oxford-Tan (1011.51) 
@@ -301,6 +310,7 @@ sneakers %>%
 ```
 
 There are a total of 51 regions where the shoes in the data set was sold, where the top regions with the most sales are: 
+
 * California (19349) 
 
 * New York (16525) 
@@ -879,6 +889,7 @@ augment(knn_final_fit, new_data = sneakers_train) %>%
 ### Model Performance 
 Next we will look at the performance of each model and compare to see which model performed best on the training data. 
 For the linear regression model, it performed with the following metrics: 
+
 * RMSE: 54.9713892 
 
 * $R^2$: 0.8682691 
@@ -887,6 +898,7 @@ For the linear regression model, it performed with the following metrics:
 
 
 For the ridge regression model, it performed with the following metrics: 
+
 * RMSE: 56.4243079 
 
 * $R^2$: 0.8626641 
@@ -895,6 +907,7 @@ For the ridge regression model, it performed with the following metrics:
 
 
 For the lasso regression model, it performed with the following metrics: 
+
 * RMSE: 55.207143 
 
 * $R^2$: 0.867142 
@@ -902,7 +915,8 @@ For the lasso regression model, it performed with the following metrics:
 * MAE: 30.440152 
 
 	
-For the decision tree model, it performed with the following metrics: 
+For the decision tree model, it performed with the following metrics:
+
 * RMSE: 26.3174108 
 
 * $R^2$: 0.9698074 
@@ -911,6 +925,7 @@ For the decision tree model, it performed with the following metrics:
 
 	
 For the random forest mode, it performed with the following metrics: 
+
 * RMSE: 38.1130937 
 
 * $R^2$: 0.9420715 
@@ -919,6 +934,7 @@ For the random forest mode, it performed with the following metrics:
 
 
 For the KNN model, it performed with the following metrics: 
+
 * RMSE: 39.0606262 
 
 * $R^2$: 0.9350643 
@@ -927,6 +943,7 @@ For the KNN model, it performed with the following metrics:
 
 
 Based on the results the models that performed, ordered in best performing to least are: 
+
 * Decision Tree 
 
 * Random Forest 
